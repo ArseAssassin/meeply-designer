@@ -1,28 +1,18 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+require('globals.js')
+require('app.styl')
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
-}
+let Router = require('components/Router.js'),
+    Storybook = require('components/views/storybook/Storybook.js'),
+    DesignView = require('components/views/designer/DesignView.js')
 
-export default App;
+
+module.exports = () =>
+    <Router notFound={ () => <h1>404</h1> }>
+        { r.splitEvery(2, [
+            routes.app, DesignView,
+            routes.storybook, (rest) =>
+                <Storybook
+                    onSelectStory={ (it) => document.location.hash = routes.storybook.reverse({ selectedStory: it }) }
+                    { ...(rest) }/>
+        ]).map(r.apply(Router.makeRoute)) }
+    </Router>
