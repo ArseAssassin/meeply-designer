@@ -1,0 +1,53 @@
+.tab-bar
+    display flex
+    flex-direction column
+
+.tab-bar__body
+    padding--s()
+    flex-grow 1
+    background-color $white
+    position relative
+
+.tab-bar__tabs
+    padding-h--s()
+    display flex
+    flex-direction row
+    border-bottom 1px solid $dark-blue
+    user-select none
+
+.tab-bar__tab
+    @extends .type
+
+    padding-asym--m()
+    margin-right $base-xs
+    border 0
+    background-color $dark-blue
+    border-radius 5px 5px 0 0
+    color $white
+    box-shadow 1px 1px 5px rgba(0, 0, 0, .5)
+    cursor pointer
+
+    button
+        border 0
+        background-color transparent
+        color $white
+
+.tab-bar__tab--selected
+    background-color $white
+    color $dark-blue
+    margin-bottom -1px
+    button
+        color $dark-blue
+
+.tab-bar__close-button
+    width 16px
+    height 16px
+    display block
+    padding 0
+
+.tab-bar__close-button:hover
+    background-color $mid-blue
+    border-radius 100%
+    cursor pointer
+    color $white
+

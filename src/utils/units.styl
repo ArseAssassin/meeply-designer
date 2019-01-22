@@ -1,0 +1,69 @@
+$base = 20px
+
+$ratio-m = 1
+$ratio-s = 1 / 2
+$ratio-xs = 1 / 4
+$ratio-xxs = 1 / 8
+$ratio-l = 1 * 2
+$ratio-xl = 1 * 4
+
+$base-m = $base * $ratio-m
+$base-s = $base * $ratio-s
+$base-xs = $base * $ratio-xs
+$base-xxs = $base * $ratio-xxs
+$base-l = $base * $ratio-l
+$base-xl = $base * $ratio-xl
+
+margin--m()
+    margin $base-m
+
+margin--l()
+    margin $base-l
+
+margin-asym--m()
+    margin $base-s $base-m
+
+margin-negative-h--m()
+    margin-left -($base-m)
+    margin-right -($base-m)
+
+margin-v--m()
+    margin-top $base-m
+    margin-bottom $base-m
+
+margin-v--s()
+    margin-top $base-s
+    margin-bottom $base-s
+
+margin-h--m()
+    margin-left $base-m
+    margin-right $base-m
+
+margin-h--s()
+    margin-left $base-s
+    margin-right $base-s
+
+padding-asym--m()
+    padding $base-s $base-m
+
+padding-asym--s()
+    padding $base-xs $base-s
+
+padding-asym--xs()
+    padding $base-xxs $base-xs
+
+padding--m()
+    padding $base-m
+
+padding-h--m()
+    padding 0 $base-m
+
+padding-h--s()
+    padding 0 $base-s
+
+padding--s()
+    padding $base-s
+
+padding-v--s()
+    padding-top $base-s
+    padding-bottom $base-s

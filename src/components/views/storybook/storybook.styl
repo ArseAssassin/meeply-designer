@@ -1,0 +1,74 @@
+.storybook
+    display flex
+    flex-direction row
+    position absolute
+    left 0
+    top 0
+    right 0
+    bottom 0
+
+    nav
+        position fixed
+        width 200px
+
+        padding 20px
+
+        ul
+            padding-left 0
+            margin 0
+
+        li
+            list-style-type none
+            color color-blue
+            margin-bottom 10px
+            font-size 20px
+            font-weight font-weight-medium
+
+    .storybook__console
+        width 200px
+        overflow auto
+        background-color color-grey
+        box-shadow 0px 0px 15px rgba(0, 0, 0, 0.3)
+
+    .storybook__console--folded
+        position fixed
+        top 0
+        right 0
+        background-color transparent
+        border 0
+
+    .storybook__log
+        padding $base-s
+        background-color color-grey
+        border-top 1px solid color-grey-dark
+
+        &:first-child
+            border-top 0
+
+    .storybook__nav-heading
+        margin-bottom 20px
+
+    article
+        flex-grow 1
+
+        padding 20px
+
+
+    .storybook__chapter
+        border 1px solid grey
+        padding 20px
+        border-radius 5px
+        background lighten(grey, 60%)
+
+        margin-top 20px
+
+    .storybook__chapter-heading
+        margin 0
+        margin-bottom 20px
+
+    .storybook__nav-link--selected
+        color $black
+
+.storybook__story
+    margin-bottom 40vh
+    margin-left 200px

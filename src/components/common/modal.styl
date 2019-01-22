@@ -1,0 +1,27 @@
+.modal
+    position absolute
+    top 0
+    left 0
+    right 0
+    bottom 0
+
+    background-color alpha($white, 0.5)
+
+    display flex
+    align-items center
+    justify-content center
+    overflow auto
+
+.modal__wrapper
+    padding--m()
+    margin--l()
+
+    background-color $white
+    border-radius 5px
+    box-shadow 0 0 15px alpha($black, 0.3)
+
+.modal__heading
+    @extends .type--heading
+    @extends .type--l
+
+

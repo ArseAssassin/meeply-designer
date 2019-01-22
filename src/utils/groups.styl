@@ -1,0 +1,83 @@
+.group
+    display flex
+
+.group--horizontal
+    flex-direction row
+
+.group--vertical
+    flex-direction column
+
+.group--grow
+    width 100%
+    height 100%
+
+.group--justify-space-between
+    justify-content space-between
+
+.group--justify-end
+    justify-content flex-end
+
+.group--justify-center
+    justify-content center
+
+.group--align-stretch
+    align-items stretch
+
+.group--align-center
+    align-items center
+
+.group--align-end
+    align-items flex-end
+
+.group__child--grow
+    flex-grow 1
+
+.group--vertical > .group__child--grow
+    height 100%
+
+.group--vertical > .group__child
+    margin ($base-m / 2) 0
+
+.group--vertical.group--margin-s > .group__child
+    margin ($base-s / 2) 0
+
+.group--vertical.group--margin-l > .group__child
+    margin ($base-l / 2) 0
+
+.group--vertical.group--margin-xs > .group__child
+    margin ($base-xs / 2) 0
+
+.group--vertical.group--margin-xl > .group__child
+    margin ($base-xl / 2) 0
+
+.group--vertical > .group__child
+    &:first-child
+        margin-top 0
+
+    &:last-child
+        margin-bottom 0
+
+.group--horizontal > .group__child
+    margin 0 ($base-m / 2)
+
+.group--horizontal.group--margin-s > .group__child
+    margin 0 ($base-s / 2)
+
+.group--horizontal.group--margin-l > .group__child
+    margin 0 ($base-l / 2)
+
+.group--horizontal.group--margin-xs > .group__child
+    margin 0 ($base-xs / 2)
+
+.group--horizontal.group--margin-xl > .group__child
+    margin 0 ($base-xl / 2)
+
+.group--horizontal > .group__child
+    &:first-child
+        margin-left 0
+
+    &:last-child
+        margin-right 0
+
+.group--margin-none > .group__child
+    margin 0
