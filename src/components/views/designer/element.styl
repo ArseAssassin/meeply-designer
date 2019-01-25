@@ -8,8 +8,15 @@
     display flex
     flex-direction row
 
-.element-view__element
+.element-view .element
     background-color $grey
+    cursor default
+
+    &.element--document-mode
+        cursor grab
+
+    &.element--grabbing
+        cursor move
 
 .element-view__canvas
     fill $white

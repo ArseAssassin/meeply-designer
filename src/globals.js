@@ -13,11 +13,13 @@ global.modifiersToClass = (className, ...modifiers) =>
         r.map((it) =>
             typeof it !== 'object'
                 ? words(it || '')
-                : threadLast(it)(
-                    r.toPairs,
-                    r.filter(r.last),
-                    r.map(r.head)
-                )
+                : Array.isArray(it)
+                    ? it
+                    : threadLast(it)(
+                        r.toPairs,
+                        r.filter(r.last),
+                        r.map(r.head)
+                    )
         ),
         r.flatten,
         r.filter(Boolean),

@@ -16,7 +16,7 @@ module.exports =
                                 <button
                                     className='tab-bar__close-button'
                                     onClick={ r.pipe(cancel, r.always(idx), onClose) }>
-                                    <Icon name='x' />
+                                    <Icon name='x' modifiers='s' />
                                 </button> }
                         </HGroup>
                     </button>

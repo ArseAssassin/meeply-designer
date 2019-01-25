@@ -7,7 +7,15 @@ let uuid = require('uuid/v4'),
 
     gameModel = require('model/gameModel.js'),
 
-    { DEFAULT_PPI } = require('constants/units.js')
+    { DEFAULT_PPI } = require('constants/units.js'),
+    templates = require('constants/templates.js')
+
+
+require('./new-element.styl')
+
+const
+    MAX_WIDTH = Math.max.apply(Math, templates.map(r.path(words('body width')))),
+    MAX_HEIGHT = Math.max.apply(Math, templates.map(r.path(words('body height'))))
 
 module.exports = switchboard.component(
     componentForm({
@@ -23,9 +31,8 @@ module.exports = switchboard.component(
         <form onSubmit={ (it) => threadLast(it)(
             cancel,
             r.always({
-                ...formValue,
-                width: 8.3 * DEFAULT_PPI,
-                height: 11.7 * DEFAULT_PPI,
+                name: formValue.name,
+                ...templates[formValue.template].body,
                 id: uuid(),
                 count: 1,
                 body: [] }),
@@ -44,21 +51,18 @@ module.exports = switchboard.component(
                 <VGroup modifiers='margin-s'>
                     <Type modifiers='label'>Template</Type>
                     { capture(<FormField.Basic name='template'>
-                        <FileExplorer rootName='/' defaultValue={ formValue.template } mustSelect>
-                            <FileExplorer.File name='Card'>
-                            </FileExplorer.File>
-
-                            <FileExplorer.File name='Chit'>
-                            </FileExplorer.File>
-
-                            <FileExplorer.File name='Tile'>
-                            </FileExplorer.File>
-
-                            <FileExplorer.File name='Map'>
-                            </FileExplorer.File>
-
-                            <FileExplorer.File name='Blank sheet'>
-                            </FileExplorer.File>
+                        <FileExplorer hideBreadcrumbs defaultValue={ formValue.template } mustSelect>
+                            { templates.map((it) =>
+                                <FileExplorer.File key={ it.name } name={ it.name }>
+                                    <svg
+                                        width='100%'
+                                        height='100%'
+                                        viewBox={ `${ - MAX_WIDTH / 2 + it.body.width / 2 - 20 } ${ - MAX_HEIGHT / 2 + it.body.height / 2 - 20 } ${ MAX_WIDTH + 40 } ${ MAX_HEIGHT + 40 }`}
+                                        className='new-element__template-face'>
+                                        <rect x='0' y='0' {...it.body} />
+                                    </svg>
+                                </FileExplorer.File>
+                            ) }
                         </FileExplorer>
                     </FormField.Basic>)}
 

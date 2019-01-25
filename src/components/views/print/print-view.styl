@@ -1,0 +1,37 @@
+@media print
+    *
+        visibility hidden
+        transition none !important
+
+    .design-view__toolbar
+        display none
+
+    .tab-bar__tabs
+        display none
+
+    .tab-bar__body
+        padding 0
+
+    .print *
+        visibility visible
+
+    .print__tools
+        display none
+
+    .group
+        display block !important
+
+
+.print__tools
+    padding--m()
+    text-align center
+
+.print
+    position relative
+
+.print .element
+    position relative
+    display inline-block
+    border 1px solid $grey
+    break-inside avoid-page
+

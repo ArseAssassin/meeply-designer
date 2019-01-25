@@ -1,26 +1,31 @@
 let gameModel = require('model/gameModel.js'),
 
-    { templates } = require('constants/elements.js')
+    { templates } = require('constants/elements.js'),
+    WrappingText = require('components/common/WrappingText.js')
 
 
 const TEXT_ALIGN = {
-    left: { anchor: 'start', position: r.always(0) },
-    center: { anchor: 'middle', position: (it) => it / 2 },
-    right: { anchor: 'end', position: r.identity }
+    left: { anchor: 'start', position: (it) => -(it / 2) },
+    center: { anchor: 'middle', position: r.always(0) },
+    right: { anchor: 'end', position: (it) => it / 2 }
 }
 
 let renderers = {
         'image': (it) =>
             <image x={ it.x } y={ it.y } href={ it.body.body } width={ it.width } height={ it.height } />,
         'text': (it) =>
-            <text
+            <WrappingText
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
                 y={ it.y }
+                helperClass=''
+                width={ it.width }
+                height={ it.height }
                 style={{ fontSize: it.fontSize + 'pt', fill: it.color }}
                 alignment-baseline='hanging'
                 text-anchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
                 { it.body }
-            </text>
+            </WrappingText>,
+        '': (it) => <text>?</text>
     },
     points = [
         [0, 0],
@@ -50,20 +55,20 @@ let renderers = {
                         }))],
                         [propsProperty]
                     )
-                    .flatMapLatest(([origin, { layer, onLayerInteract, type }]) =>
+                    .flatMapLatest(([origin, { layer, onLayerInteract, type, zoomLevel }]) =>
                         kefir.fromEvents(document.body, 'mousemove')
                         .takeUntilBy(endAction)
                         .map((e) => {
                             let isInverted = origin.directionX === 0,
                                 diffX =
                                     !isInverted
-                                        ? e.screenX - origin.x
-                                        : origin.x - e.screenX,
+                                        ? (e.screenX - origin.x) / zoomLevel
+                                        : (origin.x - e.screenX) / zoomLevel,
                                 newWidth = layer.width + diffX,
                                 diffY =
                                     !isInverted
-                                        ? e.screenY - origin.y
-                                        : origin.y - e.screenY,
+                                        ? (e.screenY - origin.y) / zoomLevel
+                                        : (origin.y - e.screenY) / zoomLevel,
                                 newHeight = layer.height + diffY
 
                             return ({
@@ -90,7 +95,7 @@ let renderers = {
                         [propsProperty]
                     )
                     .filter(r.pipe(r.last, (it) => it.selected && !it.layer.isLocked))
-                    .flatMapLatest(([origin, { layer, onLayerInteract }]) =>
+                    .flatMapLatest(([origin, { layer, onLayerInteract, zoomLevel }]) =>
                         kefir.fromEvents(document.body, 'mousemove')
                         .takeUntilBy(endAction)
                         .map((e) => {
@@ -98,8 +103,8 @@ let renderers = {
                                 layer,
                                 type: 'move',
                                 body: {
-                                    x: layer.x + e.screenX - origin.x,
-                                    y: layer.y + e.screenY - origin.y
+                                    x: layer.x + (e.screenX - origin.x) / zoomLevel,
+                                    y: layer.y + (e.screenY - origin.y) / zoomLevel
                                 }
                             })
                         })
@@ -132,13 +137,13 @@ let renderers = {
                 { points.map((it, idx) => it(layer.x, layer.y, layer.width, layer.height, wire('resize.start'))) }
             </g>
     ),
-    renderElement = (it, onLayerInteract, selectedLayer) =>
+    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel) =>
         threadLast(it)(
             r.prop('body'),
             r.map((it) =>
                 <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isLocked && 'locked') }>
                     { React.cloneElement(
-                        renderers[it.type](it),
+                        renderers[it.type || ''](it),
                         onLayerInteract && {
                             onMouseDown:
                                 r.pipe(cancel, r.always({ layer: it, type: 'mouseDown' }), onLayerInteract),
@@ -147,7 +152,8 @@ let renderers = {
                         }
                     ) }
                     <SizeIndicator
-                        type={ it.type  }
+                        type={ it.type }
+                        zoomLevel={ zoomLevel }
                         selected={ selectedLayer === it.id }
                         onLayerInteract={ onLayerInteract }
                         layer={ it } />
@@ -170,15 +176,18 @@ module.exports = switchboard.component(
         .map(r.last)
         .onValue((onClick) => onClick())
 
-        return {}
+        return {
+        }
     },
-    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract }) =>
-        <svg className='element-view__element'
+    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style }) =>
+        <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width='100%' height='100%'
              xmlns='http://www.w3.org/2000/svg'
-             onMouseDown={ wire('click.start') }
+             onMouseDown={ r.pipe(r.tap(wire('click.start')), onMouseDown || Boolean) }
+             onWheel={ onMouseWheel }
              onClick={ wire('click.end') }
+             style={ style }
              ref={ _ref }>
             { showDocument && viewBox &&
                 <rect
@@ -187,6 +196,6 @@ module.exports = switchboard.component(
                     height={ element.height }
                     x='0'
                     y='0' /> }
-            { viewBox && renderElement(element, onLayerInteract, selectedLayer) }
+            { viewBox && renderElement(element, onLayerInteract, selectedLayer, zoomLevel) }
         </svg>
 )

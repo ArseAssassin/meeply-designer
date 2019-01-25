@@ -188,7 +188,8 @@ module.exports = switchboard.component(
                         ? kefir.combine(deck.map((it) => gameModel.elements.findById(kefir.constant(it.id))))
                         : kefir.constant([])
                 )
-                .toProperty(),
+                .toProperty()
+                .skipDuplicates(r.equals),
 
             deckShown =
                 persistentSignal(signal)(
@@ -196,12 +197,40 @@ module.exports = switchboard.component(
                     true,
 
                     slot('deck.toggle'), r.not
+                ),
+
+            zoomLevel =
+                signal(
+                    1,
+
+                    slot('zoom')
+                    .throttle(1000 / 5)
+                    .map((it) => Math.sign(it) * -1),
+                    (it, deltaY) => it + deltaY * 0.25
+                ),
+
+            offset = signal(
+                [0, 0],
+
+                slot('grab.start')
+                .map(r.pick(words('screenX screenY')))
+                .flatMapLatest((origin) =>
+                    kefir.combine([offset, zoomLevel]).take(1)
+                    .flatMapLatest(([[x, y], zoomLevel]) =>
+                        kefir.fromEvents(document.body, 'mousemove')
+                        .map((it) => [
+                            x + (origin.screenX - it.screenX) / zoomLevel,
+                            y + (origin.screenY - it.screenY) / zoomLevel
+                        ])
+                        .takeUntilBy(kefir.fromEvents(document.body, 'mouseup'))
+                    )
                 )
+            )
 
         kefir.combine([
             slot('layer.interact')
             .filter(r.pipe(r.prop('type'), r.contains(r.__, words('resize move'))))
-        ], [elementId])
+        ], [elementId, zoomLevel])
         .map(([{ layer: { id }, body }, elementId]) => [id, elementId, {
             ...body
         }])
@@ -230,6 +259,7 @@ module.exports = switchboard.component(
                 height: 100,
                 type: 'text',
                 name: 'Text',
+                textAlign: 'center',
                 x: 0,
                 y: 0,
                 id: uuid()
@@ -268,7 +298,7 @@ module.exports = switchboard.component(
             [slot('layers.delete')],
             [propsProperty, elementId, deck, selectedLayer]
         )
-        .filter(r.pipe(r.last, r.equals('document')))
+        .filter(r.pipe(r.last, r.equals(DOCUMENT)))
         .onValue(([_, { onFileChange }, elementId, deck]) =>
             onFileChange(deck[r.findIndex(r.propEq('id', elementId), deck) - 1].id)
         )
@@ -307,9 +337,10 @@ module.exports = switchboard.component(
 
         return ({
             element,
+            zoomLevel,
             canvasSize:
                 signal(
-                    '',
+                    [0, 0, 0, 0,],
 
                     slot('ref')
                     .filter(Boolean)
@@ -338,17 +369,27 @@ module.exports = switchboard.component(
                             let x = element.width / 2 - width / 2,
                                 y = element.height / 2 - height / 2.5
 
-                            return [x, y, width, height].join(' ')
+                            return [x, y, width, height]
                         })
                     )
                 ),
+            offset,
             layers,
             selectedLayer,
             deckShown,
-            deck
+            deck,
+            documentMode: selectedLayer.map(r.equals(DOCUMENT)),
+            grabbing: signal(
+                false,
+
+                slot('grab.start')
+                .flatMapLatest(() =>
+                    kefir.defaultValue(true, kefir.fromEvents(document.body, 'mouseup').map(r.F).take(1))
+                )
+            )
         })
     },
-    ({ wiredState: { deckShown, deck, selectedLayer, layers, selectedTool, element, canvasSize }, wire }) =>
+    ({ wiredState: { deckShown, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
         <div className='element-view'>
             <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>
                 <button className='element-view__tab' onClick={ wire('deck.toggle') }>Deck</button>
@@ -373,13 +414,24 @@ module.exports = switchboard.component(
             </div>
 
             <ElementRenderer
+                modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
+                debounceUpdates={ 0 }
                 element={ element }
-                viewBox={ canvasSize }
+                zoomLevel={ zoomLevel }
+                viewBox={
+                    r.zip(
+                        canvasSize,
+
+                        offset.map((it) => (a) => a + it)
+                        .concat(r.repeat((a) => a / zoomLevel, 2))
+                    )
+                    .map(([it, fn]) => fn(it))
+                    .join(' ')
+                }
                 onLayerInteract={ wire('layer.interact') }
                 onClick={ r.pipe(r.always(DOCUMENT), wire('layer.select')) }
-                onMouseDown={ wire('document.mouseDown') }
-                onMouseUp={ wire('document.mouseUp') }
-                onMouseMove={ wire('document.move') }
+                onMouseDown={ documentMode && wire('grab.start') }
+                onMouseWheel={ r.pipe(r.prop('deltaY'), wire('zoom')) }
                 selectedLayer={ selectedLayer }
                 showDocument
                 _ref={ wire('ref') } />
@@ -400,8 +452,8 @@ module.exports = switchboard.component(
                                         className='element-view__add-layer'
                                         onClick={ wire('layers.image.add') }>
                                         <HGroup modifiers='margin-xs'>
-                                            <Icon name='image' modifiers='l' />
-                                            <Icon name='plus' modifiers='l' />
+                                            <Icon name='image' />
+                                            <Icon name='plus' />
                                         </HGroup>
                                     </button>
 
@@ -410,8 +462,8 @@ module.exports = switchboard.component(
                                         className='element-view__add-layer'
                                         onClick={ wire('layers.text.add') }>
                                         <HGroup modifiers='margin-xs'>
-                                            <Icon name='type' modifiers='l' />
-                                            <Icon name='plus' modifiers='l' />
+                                            <Icon name='type' />
+                                            <Icon name='plus' />
                                         </HGroup>
                                     </button>
                                 </HGroup>
@@ -420,11 +472,11 @@ module.exports = switchboard.component(
                                     disabled={
                                         element.template
                                             ? !(selectedLayer === DOCUMENT || !getLayer(selectedLayer, layers).isLinked)
-                                            : selectedLayer !== DOCUMENT
+                                            : selectedLayer === DOCUMENT
                                     }
                                     className='element-view__tool'
                                     onClick={ wire('layers.delete') }>
-                                    <Icon name={ element.template && selectedLayer !== DOCUMENT ? 'reset' : 'trash'} modifiers='l' />
+                                    <Icon name={ element.template && selectedLayer !== DOCUMENT ? 'reset' : 'trash'} />
                                 </button>
                             </HGroup>
 
@@ -440,7 +492,7 @@ module.exports = switchboard.component(
                                             ) }>
                                         <HGroup modifiers='margin-s align-center justify-space-between'>
                                             <HGroup modifiers='margin-s align-center'>
-                                                <Icon name={ LAYER_ICONS[it.type] } modifiers='l' />
+                                                <Icon name={ LAYER_ICONS[it.type] } />
                                                 { it.name }
                                             </HGroup>
 

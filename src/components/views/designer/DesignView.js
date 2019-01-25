@@ -2,8 +2,10 @@ let TabBar = require('components/common/TabBar.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
+    PrintView = require('components/views/print/PrintView.js'),
     Element = require('components/views/designer/Element.js'),
     gameModel = require('model/gameModel.js'),
+    Button = require('components/common/Button.js'),
 
     persistentSignal = require('model/persistentSignal.js')
 
@@ -28,6 +30,11 @@ let tabTypes = {
                 }
             }),
             label: () => '*Create new deck'
+        },
+        print: {
+            component: PrintView,
+            props: r.always({}),
+            label: r.always('Print')
         }
     },
     NewElementTab = (onClose) => () =>
@@ -43,6 +50,11 @@ module.exports = switchboard.component(
                 slot('elements.new'),
                 (it) => it.concat({
                     component: 'newElement'
+                }),
+
+                slot('print'),
+                (it) => it.concat({
+                    component: 'print'
                 }),
 
                 slot('tab.change'),
@@ -98,55 +110,67 @@ module.exports = switchboard.component(
         })
     },
     ({ wiredState: { selectedTab, tabs, elements }, wire }) =>
-        <TabBar selected={ selectedTab } onSelect={ wire('tabs.select') } onClose={ wire('tabs.close') }>
-            <TabBar.Tab label='Game 1' closingDisabled>
-                <FileExplorer
-                    rootName='/'
-                    onDelete={ r.pipe(
-                        (it) => elements[it].id,
-                        wire(gameModel.elements.deleteElement)
-                    ) }>
+        <div className='design-view'>
+            <div className='design-view__toolbar'>
+                <HGroup modifiers='grow align-center margin-none'>
+                    <Button modifiers='s'><Icon name='document' /></Button>
+                    <Button modifiers='s'><Icon name='folder' /></Button>
+                    <Button modifiers='s'><Icon name='save' /></Button>
+                    <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
+                </HGroup>
+            </div>
 
-                    { elements.map((it, idx) =>
-                        <FileExplorer.File
-                            name={ it.name }
-                            onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
-                            <div className='design-view__file'>
-                                <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                                <div className='design-view__count'>
-                                    <HGroup modifiers='margin-s'>
-                                        <input
-                                            onClick={ cancel }
-                                            onDoubleClick={ cancel }
-                                            step='1'
-                                            min='0'
-                                            type='number'
-                                            onChange={ r.pipe(
-                                                r.path(words('target value')),
-                                                parseInt,
-                                                r.pair(it.id),
-                                                wire(gameModel.elements.setCount)
-                                            ) }
-                                            value={ it.count } />
-                                    </HGroup>
+            <TabBar selected={ selectedTab } onSelect={ wire('tabs.select') } onClose={ wire('tabs.close') }>
+                <TabBar.Tab label='Game 1' closingDisabled>
+                    <FileExplorer
+                        rootName='/'
+                        onDelete={ r.pipe(
+                            (it) => elements[it].id,
+                            wire(gameModel.elements.deleteElement)
+                        ) }>
+
+                        { elements.map((it, idx) =>
+                            <FileExplorer.File
+                                name={ it.name }
+                                onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
+                                <div className='design-view__file'>
+                                    <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
+                                    <div className='design-view__count'>
+                                        <HGroup modifiers='margin-s align-center'>
+                                            <Icon name='count' modifiers='m' />
+                                            <input
+                                                onClick={ cancel }
+                                                onDoubleClick={ cancel }
+                                                step='1'
+                                                min='0'
+                                                type='number'
+                                                onChange={ r.pipe(
+                                                    r.path(words('target value')),
+                                                    parseInt,
+                                                    r.pair(it.id),
+                                                    wire(gameModel.elements.setCount)
+                                                ) }
+                                                value={ it.count } />
+                                        </HGroup>
+                                    </div>
                                 </div>
-                            </div>
+                            </FileExplorer.File>
+                        ) }
+
+                        <FileExplorer.File name='Create new deck' onDoubleClick={ wire('elements.new') }>
+                            <Icon name='create' />
                         </FileExplorer.File>
-                    ) }
-
-                    <FileExplorer.File name='Create deck' onDoubleClick={ wire('elements.new') }>
-                        <Icon name='create' />
-                    </FileExplorer.File>
-                </FileExplorer>
-            </TabBar.Tab>
-
-            { tabs.map((it, idx) =>
-                <TabBar.Tab label={ tabTypes[it.component].label(it.props, elements) } key={ idx }>
-                    { React.createElement(
-                        tabTypes[it.component].component,
-                        (tabTypes[it.component].props || r.identity)(it.props, wire, idx)
-                    ) }
+                    </FileExplorer>
                 </TabBar.Tab>
-            ) }
-        </TabBar>
+
+                { tabs.map((it, idx) =>
+                    <TabBar.Tab label={ tabTypes[it.component].label(it.props, elements) } key={ idx }>
+                        { React.createElement(
+                            tabTypes[it.component].component,
+                            (tabTypes[it.component].props || r.identity)(it.props, wire, idx)
+                        ) }
+                    </TabBar.Tab>
+                ) }
+            </TabBar>
+        </div>
 )

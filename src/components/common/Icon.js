@@ -15,7 +15,11 @@ let icons = {
     'align-left': require('./../../../node_modules/feather-icons/dist/icons/align-left.svg'),
     'align-center': require('./../../../node_modules/feather-icons/dist/icons/align-center.svg'),
     'align-right': require('./../../../node_modules/feather-icons/dist/icons/align-right.svg'),
-    reset: require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg')
+    reset: require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg'),
+    count: require('./../../../node_modules/feather-icons/dist/icons/layers.svg'),
+    print: require('./../../../node_modules/feather-icons/dist/icons/printer.svg'),
+    document: require('./../../../node_modules/feather-icons/dist/icons/file.svg'),
+    save: require('./../../../node_modules/feather-icons/dist/icons/save.svg')
 }
 
 module.exports = ({ name, modifiers='' }) =>
