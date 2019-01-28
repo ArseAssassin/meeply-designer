@@ -19,7 +19,9 @@ let icons = {
     count: require('./../../../node_modules/feather-icons/dist/icons/layers.svg'),
     print: require('./../../../node_modules/feather-icons/dist/icons/printer.svg'),
     document: require('./../../../node_modules/feather-icons/dist/icons/file.svg'),
-    save: require('./../../../node_modules/feather-icons/dist/icons/save.svg')
+    save: require('./../../../node_modules/feather-icons/dist/icons/save.svg'),
+    test: require('./../../../node_modules/feather-icons/dist/icons/play-circle.svg'),
+    info: require('./../../../node_modules/feather-icons/dist/icons/info.svg')
 }
 
 module.exports = ({ name, modifiers='' }) =>

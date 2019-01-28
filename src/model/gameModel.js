@@ -15,6 +15,8 @@ module.exports = switchboard.model(({ signal, slot }) => {
             'project',
             [],
 
+            slot('elements.set'),
+
             slot('element.delete'), (it, id) =>
                 it.filter((it) => it.id !== id),
 
@@ -88,7 +90,8 @@ module.exports = switchboard.model(({ signal, slot }) => {
             deleteElement: slot('element.delete'),
             addLayer: slot('element.layers.add'),
             deleteLayer: slot('element.layers.delete'),
-            updateLayer: slot('element.layers.update')
+            updateLayer: slot('element.layers.update'),
+            set: slot('elements.set')
         }
     })
 })

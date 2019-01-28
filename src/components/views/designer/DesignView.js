@@ -2,14 +2,19 @@ let TabBar = require('components/common/TabBar.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
+    TestGame = require('components/views/designer/TestGame.js'),
+    GameInfo = require('components/views/designer/GameInfo.js'),
     PrintView = require('components/views/print/PrintView.js'),
     Element = require('components/views/designer/Element.js'),
     gameModel = require('model/gameModel.js'),
     Button = require('components/common/Button.js'),
 
-    persistentSignal = require('model/persistentSignal.js')
+    persistentSignal = require('model/persistentSignal.js'),
+    fileUtils = require('utils/fileUtils.js')
 
 require('./design-view.styl')
+
+const FILE_REGEX = /^data:.+\/(.+);base64,(.*)$/
 
 let tabTypes = {
         element: {
@@ -35,6 +40,16 @@ let tabTypes = {
             component: PrintView,
             props: r.always({}),
             label: r.always('Print')
+        },
+        test: {
+            component: TestGame,
+            props: r.always({}),
+            label: r.always('Test game')
+        },
+        info: {
+            component: GameInfo,
+            props: r.always({}),
+            label: r.always('Game information')
         }
     },
     NewElementTab = (onClose) => () =>
@@ -57,6 +72,16 @@ module.exports = switchboard.component(
                     component: 'print'
                 }),
 
+                slot('info'),
+                (it) => it.concat({
+                    component: 'info'
+                }),
+
+                slot('test'),
+                (it) => it.concat({
+                    component: 'test'
+                }),
+
                 slot('tab.change'),
                 (it, [index, elementId]) =>
                     r.adjust(index, (it) => ({ ...it, props: { ...it.props, id: elementId }}), it),
@@ -77,6 +102,28 @@ module.exports = switchboard.component(
                 slot('tabs.close'),
                 (it, idx) => r.remove(idx - 1, 1, it)
             )
+
+        kefir.combine(
+            [slot('save')],
+            [gameModel.elements.signal]
+        )
+        .map(r.last)
+        .onValue((it) => fileUtils.save('project.json', it))
+
+        slot('new')
+        .map(r.always([]))
+        .to(gameModel.elements.set)
+
+        slot('open')
+        .flatMapLatest(() => fileUtils.load('.json'))
+        .filter((it) => FILE_REGEX.test(it))
+        .map((it) => {
+            let matches = it.match(FILE_REGEX),
+                buffer = new Buffer(matches[2], 'base64')
+
+            return JSON.parse(buffer.toString())
+        })
+        .to(gameModel.elements.set)
 
         return ({
             selectedTab:
@@ -113,10 +160,12 @@ module.exports = switchboard.component(
         <div className='design-view'>
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center margin-none'>
-                    <Button modifiers='s'><Icon name='document' /></Button>
-                    <Button modifiers='s'><Icon name='folder' /></Button>
-                    <Button modifiers='s'><Icon name='save' /></Button>
+                    <Button modifiers='s' onClick={ wire('new') }><Icon name='document' /></Button>
+                    <Button modifiers='s' onClick={ wire('open') }><Icon name='folder' /></Button>
+                    <Button modifiers='s' onClick={ wire('save') }><Icon name='save' /></Button>
                     <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
+                    <Button modifiers='s' onClick={ wire('test') }><Icon name='test' /></Button>
+                    <Button modifiers='s' onClick={ wire('info') }><Icon name='info' /></Button>
                 </HGroup>
             </div>
 

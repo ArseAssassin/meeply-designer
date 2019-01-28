@@ -46,6 +46,16 @@ let findName = (name, names, index=2) => {
                 <VGroup>
                     <Type modifiers='heading'>Edit layer</Type>
 
+                    {layer.type === 'text' && capture(<FormField name='body'>
+                        <Input.Textarea />
+                    </FormField>)}
+
+                    { layer.type === 'image' &&
+                        capture(<FormField.Basic name='body'>
+                            <FileBrowser type='image' />
+                        </FormField.Basic>)
+                    }
+
                     { capture(<FormField name='name'>
                         <Input.Text label='Name' />
                     </FormField>) }
@@ -104,17 +114,7 @@ let findName = (name, names, index=2) => {
                                     </button>
                                 )}
                             </HGroup>
-
-                            {capture(<FormField name='body'>
-                                <Input.Textarea />
-                            </FormField>)}
                         </VGroup>
-                    }
-
-                    { layer.type === 'image' &&
-                        capture(<FormField.Basic name='body'>
-                            <FileBrowser type='image' />
-                        </FormField.Basic>)
                     }
                 </VGroup>
             </div>
@@ -394,23 +394,25 @@ module.exports = switchboard.component(
             <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>
                 <button className='element-view__tab' onClick={ wire('deck.toggle') }>Deck</button>
 
-                <FileExplorer
-                    mustSelect
-                    hideBreadcrumbs
-                    onChange={ wire('file.change') }
-                    defaultValue={ r.findIndex(r.propEq('id', element.id), deck) }>
-                    { deck.map((it) =>
-                        <FileExplorer.File name={ it.name }>
-                            <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                        </FileExplorer.File>
-                    ) }
+                <div className='element-view__cards'>
+                    <FileExplorer
+                        mustSelect
+                        hideBreadcrumbs
+                        onChange={ wire('file.change') }
+                        defaultValue={ r.findIndex(r.propEq('id', element.id), deck) }>
+                        { deck.map((it) =>
+                            <FileExplorer.File name={ it.name }>
+                                <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
+                            </FileExplorer.File>
+                        ) }
 
-                    <FileExplorer.File
-                        name='Create element'
-                        onDoubleClick={ wire('deck.add') }>
-                        <Icon name='create' />
-                    </FileExplorer.File>
-                </FileExplorer>
+                        <FileExplorer.File
+                            name='Create element'
+                            onDoubleClick={ wire('deck.add') }>
+                            <Icon name='create' />
+                        </FileExplorer.File>
+                    </FileExplorer>
+                </div>
             </div>
 
             <ElementRenderer

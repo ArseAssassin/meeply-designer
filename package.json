@@ -26,6 +26,7 @@
     "eslint-plugin-react": "7.11.1",
     "feather-icons": "4.10.0",
     "file-loader": "2.0.0",
+    "file-saver": "2.0.0",
     "fork-ts-checker-webpack-plugin-alt": "0.4.14",
     "fs-extra": "7.0.0",
     "html-webpack-plugin": "4.0.0-alpha.2",

@@ -14,6 +14,6 @@ module.exports = {
     Number: ({ label, modifiers='', ...rest }) =>
         <VGroup modifiers='margin-s'>
             { label && <span className='input__label'>{ label }</span> }
-            <input type='number' className={ modifiersToClass('input', modifiers) } { ...rest } />
+            <input type='number' className={ modifiersToClass('input', 'number', modifiers) } { ...rest } />
         </VGroup>,
 }
