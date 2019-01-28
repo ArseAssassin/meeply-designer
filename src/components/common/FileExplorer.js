@@ -107,7 +107,7 @@ module.exports = switchboard.component(
 
 module.exports.File = File
 
-module.exports.Folder = ({ name, children, navigateToThis, ...rest }) =>
+module.exports.Folder = ({ name, face=<Icon name='folder' />, children, navigateToThis, ...rest }) =>
     <File name={ name } onDoubleClick={ () => navigateToThis() }>
-        <Icon name='folder' />
+        { face }
     </File>

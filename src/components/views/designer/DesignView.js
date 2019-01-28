@@ -153,10 +153,12 @@ module.exports = switchboard.component(
                 .map(([selection, max]) => Math.min(max, selection)),
             tabs,
             elements:
-                gameModel.elements.populateTemplate(gameModel.elements.signal)
+                gameModel.elements.populateTemplate(gameModel.elements.signal),
+            decks:
+                gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template)))
         })
     },
-    ({ wiredState: { selectedTab, tabs, elements }, wire }) =>
+    ({ wiredState: { decks, selectedTab, tabs, elements }, wire }) =>
         <div className='design-view'>
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center margin-none'>
@@ -178,33 +180,46 @@ module.exports = switchboard.component(
                             wire(gameModel.elements.deleteElement)
                         ) }>
 
-                        { elements.map((it, idx) =>
-                            <FileExplorer.File
-                                name={ it.name }
-                                onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
-                                <div className='design-view__file'>
-                                    <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                                    <div className='design-view__count'>
-                                        <HGroup modifiers='margin-s align-center'>
-                                            <Icon name='count' modifiers='m' />
-                                            <input
-                                                onClick={ cancel }
-                                                onDoubleClick={ cancel }
-                                                step='1'
-                                                min='0'
-                                                type='number'
-                                                onChange={ r.pipe(
-                                                    r.path(words('target value')),
-                                                    parseInt,
-                                                    r.pair(it.id),
-                                                    wire(gameModel.elements.setCount)
-                                                ) }
-                                                value={ it.count } />
-                                        </HGroup>
-                                    </div>
-                                </div>
-                            </FileExplorer.File>
+                        { decks.map(({ name, id, ...deck }) =>
+                            <FileExplorer.Folder
+                                face={
+                                    <ElementRenderer
+                                        element={ deck }
+                                        viewBox={ `0 0 ${ deck.width } ${ deck.height }`}
+                                        showDocument />
+                                }
+                                name={ name }
+                                key={ id }>
+                                { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
+                                    <FileExplorer.File
+                                        name={ it.name }
+                                        onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
+                                        <div className='design-view__file'>
+                                            <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
+                                            <div className='design-view__count'>
+                                                <HGroup modifiers='margin-s align-center'>
+                                                    <Icon name='count' modifiers='m' />
+                                                    <input
+                                                        onClick={ cancel }
+                                                        onDoubleClick={ cancel }
+                                                        step='1'
+                                                        min='0'
+                                                        type='number'
+                                                        onChange={ r.pipe(
+                                                            r.path(words('target value')),
+                                                            parseInt,
+                                                            r.pair(it.id),
+                                                            wire(gameModel.elements.setCount)
+                                                        ) }
+                                                        value={ it.count } />
+                                                </HGroup>
+                                            </div>
+                                        </div>
+                                    </FileExplorer.File>
+                                ) }
+                            </FileExplorer.Folder>
                         ) }
+
 
                         <FileExplorer.File name='Create new deck' onDoubleClick={ wire('elements.new') }>
                             <Icon name='create' />
