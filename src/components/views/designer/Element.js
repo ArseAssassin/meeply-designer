@@ -10,15 +10,16 @@ let uuid = require('uuid/v4'),
     persistentSignal = require('model/persistentSignal.js'),
 
     { DEFAULT_PPI } = require('constants/units.js'),
-    componentForm = require('wireState/componentForm.js')
+    componentForm = require('wireState/componentForm.js'),
+    saveTabState = require('wireState/saveTabState.js')
 
 require('./element.styl')
 
 let findName = (name, names, index=2) => {
         let proposedName = `${name} #${index}`
 
-        return r.contains(proposedName, names)
-            ? findName(name, name, index + 1)
+        return r.contains(log(proposedName), log(names))
+            ? findName(name, names, index + 1)
             : proposedName
     },
     getLayer = (layer, layers) =>
@@ -134,7 +135,7 @@ const
     DOCUMENT = 'document'
 
 module.exports = switchboard.component(
-    ({ propsProperty, signal, slot }) => {
+    saveTabState(({ propsProperty, savedSignal, signal, slot }) => {
         let elementId = propsProperty.map(r.prop('id')).skipDuplicates(),
             element = gameModel.elements.findById(elementId),
             isLocked = element.map(r.prop('isLocked')),
@@ -145,7 +146,7 @@ module.exports = switchboard.component(
                 )
                 .toProperty(),
             selectedLayer =
-                signal(
+                savedSignal('selectedLayer')(
                     DOCUMENT,
 
                     slot('layer.select'),
@@ -173,15 +174,17 @@ module.exports = switchboard.component(
                 ),
             deck =
                 element
-
                 .flatMapLatest(({ id, template }) =>
                     gameModel.elements.signal
-                    .map(r.filter((it) =>
-                        template
-                            ? it.template === template || it.id === template
-                            : it.template === id || it.id === id
+                    .map(r.pipe(
+                        r.filter((it) =>
+                            template
+                                ? it.template === template || it.id === template
+                                : it.template === id || it.id === id
+                        ),
+                        r.map((it) => ({ ...it, template: it.template || '' })),
+                        r.sortBy(r.prop('template'))
                     ))
-                    .map(r.sortBy(r.prop('template')))
                 )
                 .flatMapLatest((deck) =>
                     deck.length
@@ -200,7 +203,7 @@ module.exports = switchboard.component(
                 ),
 
             zoomLevel =
-                signal(
+                savedSignal('zoomLevel')(
                     1,
 
                     slot('zoom')
@@ -209,7 +212,7 @@ module.exports = switchboard.component(
                     (it, deltaY) => it + deltaY * 0.25
                 ),
 
-            offset = signal(
+            offset = savedSignal('offset')(
                 [0, 0],
 
                 slot('grab.start')
@@ -388,7 +391,7 @@ module.exports = switchboard.component(
                 )
             )
         })
-    },
+    }),
     ({ wiredState: { deckShown, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
         <div className='element-view'>
             <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>

@@ -23,7 +23,7 @@ module.exports = switchboard.component(
                 <HGroup key={ id } modifiers='align-center'>
                     <Type>{ name }</Type>
                     <HGroup modifiers='margin-xs align-center'>
-                        <Icon name='hash' modifiers='s' />
+                        <Icon name='count' modifiers='s' />
                         { count }
                     </HGroup>
                 </HGroup>

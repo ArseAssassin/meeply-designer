@@ -47,7 +47,18 @@ module.exports = switchboard.component(
                                 defaultValue={ chosenImage }
                                 onChange={ wire('image.set') }
                                 rootName='/'
-                                modifiers='icon-xs'>
+                                modifiers='icon-xs'
+                                preview={
+                                    <div className='file-browser__preview' data-group-modifiers='align-center'>
+                                        <VGroup>
+                                            <img src={ images[chosenImage].body } />
+                                            <Type modifiers='align-center'>{ images[chosenImage].name }</Type>
+                                            <Type modifiers='align-center'>{ images[chosenImage].license }</Type>
+
+                                            <button onClick={ save }>Save</button>
+                                        </VGroup>
+                                    </div>
+                                }>
                                 <FileExplorer.Folder name='Fractal Symbols'>
                                     { images.map((it) =>
                                         <FileExplorer.File name={ it.name } key={ it.name } onDoubleClick={ save }>
@@ -56,20 +67,8 @@ module.exports = switchboard.component(
                                     ) }
                                 </FileExplorer.Folder>
                             </FileExplorer>
-
-                        </div>
-
-                        <div className='file-browser__preview'>
-                            <VGroup>
-                                <img src={ images[chosenImage].body } />
-                                <Type modifiers='align-center'>{ images[chosenImage].name }</Type>
-
-                                <button onClick={ save }>Save</button>
-                            </VGroup>
                         </div>
                     </HGroup>
-
-                    <Type modifiers='xs'>Fractal Symbols by Felix Thålin. Licensed under <a href='https://creativecommons.org/licenses/by/4.0/' target='_blank'>Creative Commons Attrubution 4.0 International</a> license.</Type>
                 </VGroup>
             </Modal>
 

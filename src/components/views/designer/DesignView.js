@@ -1,4 +1,6 @@
-let TabBar = require('components/common/TabBar.js'),
+let uuid = require('uuid/v4'),
+
+    TabBar = require('components/common/TabBar.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
@@ -64,22 +66,26 @@ module.exports = switchboard.component(
 
                 slot('elements.new'),
                 (it) => it.concat({
-                    component: 'newElement'
+                    component: 'newElement',
+                    id: uuid()
                 }),
 
                 slot('print'),
                 (it) => it.concat({
-                    component: 'print'
+                    component: 'print',
+                    id: uuid()
                 }),
 
                 slot('info'),
                 (it) => it.concat({
-                    component: 'info'
+                    component: 'info',
+                    id: uuid()
                 }),
 
                 slot('test'),
                 (it) => it.concat({
-                    component: 'test'
+                    component: 'test',
+                    id: uuid()
                 }),
 
                 slot('tab.change'),
@@ -155,10 +161,19 @@ module.exports = switchboard.component(
             elements:
                 gameModel.elements.populateTemplate(gameModel.elements.signal),
             decks:
-                gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template)))
+                gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template))),
+            counts:
+                gameModel.elements.counts,
+
+            tabState: signal(
+                {},
+
+                slot('tabState.update'),
+                r.merge
+            )
         })
     },
-    ({ wiredState: { decks, selectedTab, tabs, elements }, wire }) =>
+    ({ wiredState: { tabState, decks, selectedTab, tabs, elements, counts }, wire }) =>
         <div className='design-view'>
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center margin-none'>
@@ -173,65 +188,85 @@ module.exports = switchboard.component(
 
             <TabBar selected={ selectedTab } onSelect={ wire('tabs.select') } onClose={ wire('tabs.close') }>
                 <TabBar.Tab label='Game 1' closingDisabled>
-                    <FileExplorer
-                        rootName='/'
-                        onDelete={ r.pipe(
-                            (it) => elements[it].id,
-                            wire(gameModel.elements.deleteElement)
-                        ) }>
+                    <div className='game-view'>
+                        <FileExplorer
+                            rootName='/'
+                            onDelete={ r.pipe(
+                                (it) => elements[it].id,
+                                wire(gameModel.elements.deleteElement)
+                            ) }>
 
-                        { decks.map(({ name, id, ...deck }) =>
-                            <FileExplorer.Folder
-                                face={
-                                    <ElementRenderer
-                                        element={ deck }
-                                        viewBox={ `0 0 ${ deck.width } ${ deck.height }`}
-                                        showDocument />
-                                }
-                                name={ name }
-                                key={ id }>
-                                { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
-                                    <FileExplorer.File
-                                        name={ it.name }
-                                        onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
-                                        <div className='design-view__file'>
-                                            <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                                            <div className='design-view__count'>
-                                                <HGroup modifiers='margin-s align-center'>
-                                                    <Icon name='count' modifiers='m' />
-                                                    <input
-                                                        onClick={ cancel }
-                                                        onDoubleClick={ cancel }
-                                                        step='1'
-                                                        min='0'
-                                                        type='number'
-                                                        onChange={ r.pipe(
-                                                            r.path(words('target value')),
-                                                            parseInt,
-                                                            r.pair(it.id),
-                                                            wire(gameModel.elements.setCount)
-                                                        ) }
-                                                        value={ it.count } />
-                                                </HGroup>
+                            { decks.map(({ name, id, ...deck }) =>
+                                <FileExplorer.Folder
+                                    face={
+                                        <ElementRenderer
+                                            element={ deck }
+                                            viewBox={ `0 0 ${ deck.width } ${ deck.height }`}
+                                            showDocument />
+                                    }
+                                    label={ <HGroup modifiers='margin-s'>
+                                        {name}
+                                        <HGroup modifiers='margin-xs align-center'>
+                                            <Icon name='count' modifiers='s' />
+                                            { counts[id] }
+                                        </HGroup>
+                                    </HGroup> }
+                                    name={ name }
+                                    key={ id }>
+                                    { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
+                                        <FileExplorer.File
+                                            name={ it.name }
+                                            onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
+                                            <div className='design-view__file'>
+                                                <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
+                                                <div className='design-view__count'>
+                                                    <HGroup modifiers='margin-s align-center'>
+                                                        <Icon name='count' modifiers='m' />
+                                                        <input
+                                                            onClick={ cancel }
+                                                            onDoubleClick={ cancel }
+                                                            step='1'
+                                                            min='0'
+                                                            type='number'
+                                                            onChange={ r.pipe(
+                                                                r.path(words('target value')),
+                                                                parseInt,
+                                                                r.pair(it.id),
+                                                                wire(gameModel.elements.setCount)
+                                                            ) }
+                                                            value={ it.count } />
+                                                    </HGroup>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </FileExplorer.File>
-                                ) }
-                            </FileExplorer.Folder>
-                        ) }
+                                        </FileExplorer.File>
+                                    ) }
+                                </FileExplorer.Folder>
+                            ) }
 
 
-                        <FileExplorer.File name='Create new deck' onDoubleClick={ wire('elements.new') }>
-                            <Icon name='create' />
-                        </FileExplorer.File>
-                    </FileExplorer>
+                            <FileExplorer.File name='Create new deck' onDoubleClick={ wire('elements.new') }>
+                                <Icon name='create' />
+                            </FileExplorer.File>
+                        </FileExplorer>
+                    </div>
                 </TabBar.Tab>
 
                 { tabs.map((it, idx) =>
                     <TabBar.Tab label={ tabTypes[it.component].label(it.props, elements) } key={ idx }>
                         { React.createElement(
                             tabTypes[it.component].component,
-                            (tabTypes[it.component].props || r.identity)(it.props, wire, idx)
+                            r.merge(
+                                (tabTypes[it.component].props || r.identity)(it.props, wire, idx),
+                                {
+                                    tabState: tabState[it.id] || {},
+                                    onTabState: r.pipe((update) => wire('tabState.update')({
+                                        [it.id]: {
+                                            ...tabState[it.id] || {},
+                                            ...update
+                                        }
+                                    }))
+                                }
+                            )
                         ) }
                     </TabBar.Tab>
                 ) }

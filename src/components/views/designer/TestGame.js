@@ -1,54 +1,75 @@
 let gameModel = require('model/gameModel.js'),
     Input = require('components/common/Input.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
-    { DEFAULT_PPI } = require('constants/units.js')
+    { DEFAULT_PPI } = require('constants/units.js'),
+
+    saveTabState = require('wireState/saveTabState.js')
 
 
 const MIN_CARDS = 1
 
 module.exports = switchboard.component(
-    ({ signal, slot }) => {
+    saveTabState(({ savedSignal, signal, slot }) => {
         let selectedDeck =
-                signal(
+                savedSignal('selectedDeck')(
                     '',
                     slot('deck.select')
                 ),
             cardsToDraw =
-                signal(
+                savedSignal('cardsToDraw')(
                     {},
 
-                    slot('cards.set'), r.merge
+                    slot('cards.update'), r.merge
+                ),
+            filters =
+                savedSignal('filters')(
+                    {},
+
+                    slot('filters.update'), r.merge
                 )
 
         return ({
             decks: gameModel.elements.signal.map(r.filter((it) => !it.template)),
             selectedDeck,
             cardsToDraw,
-            drawnCards: signal(
+            filters,
+            drawnCards: savedSignal('drawnCards')(
                 {},
 
                 kefir.combine(
                     [slot('draw')],
-                    [cardsToDraw]
+                    [cardsToDraw, filters]
                 )
-                .flatMapLatest(([deck, cardsToDraw]) =>
+                .flatMapLatest(([deck, cardsToDraw, filters]) =>
                     gameModel.elements.populateTemplate(
                         gameModel.elements.signal
                         .map(r.pipe(
                             r.filter((it) => it.template === deck),
+
                             r.map((it) => r.repeat(it, it.count)),
                             r.unnest,
                             r.sortBy(() => Math.random()),
-                            r.take(cardsToDraw[deck] || MIN_CARDS)
                         ))
                     )
-                    .map((it) => ({ [deck]: it }))
+                    .map(r.pipe(
+                        filters[deck]
+                            ? r.filter((it) => {
+                                let filter = filters[deck],
+                                    [query, result] = filter.split('='),
+                                    [id, field] = words(query)
+
+                                return (r.find(r.propEq('id', id.trim()), it.body) || {})[field.trim()] === result.trim()
+                            })
+                            : r.identity,
+                        r.take(cardsToDraw[deck] || MIN_CARDS),
+                        (it) => ({ [deck]: it })
+                    )),
                 ),
                 r.merge
             )
         })
-    },
-    ({ wiredState: { drawnCards, selectedDeck, decks, cardsToDraw }, wire }) =>
+    }),
+    ({ wiredState: { drawnCards, selectedDeck, filters, decks, cardsToDraw }, wire }) =>
         <VGroup>
             <Type modifiers='heading'>Test game decks</Type>
 
@@ -58,17 +79,28 @@ module.exports = switchboard.component(
 
                    <form onSubmit={ r.pipe(cancel, r.always(id), wire('draw')) }>
                         <HGroup modifiers='margin-xs align-center'>
-                            <Icon name='hash' modifiers='s' />
-                            <VGroup modifiers='margin-s'>
-                                <Input.Number
-                                    value={ cardsToDraw[id] || MIN_CARDS }
+                            <VGroup modifiers='margin-xs'>
+                                <HGroup modifiers='margin-xs align-center'>
+                                    <Icon name='count' modifiers='s' />
+                                    <Input.Number
+                                        value={ cardsToDraw[id] || MIN_CARDS }
+                                        onChange={ r.pipe(
+                                            r.path(words('target value')),
+                                            parseInt,
+                                            (it) => ({ [id]: it }),
+                                            wire('cards.update')
+                                        ) } />
+                                </HGroup>
+
+                                <Input.Text
+                                    placeholder='Filter deck'
                                     onChange={ r.pipe(
                                         r.path(words('target value')),
-                                        parseInt,
                                         (it) => ({ [id]: it }),
-                                        wire('cards.set')
-                                    ) } />
-                            </VGroup>
+                                        wire('filters.update')
+                                    )}
+                                    value={ filters[id] || '' }/>
+                                </VGroup>
 
                             <button>Draw</button>
                         </HGroup>

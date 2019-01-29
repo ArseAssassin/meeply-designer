@@ -61,3 +61,33 @@ global.withName = (name, fn) => {
 }
 
 kefir.defaultValue = (value, stream) => kefir.constant(value).merge(stream).toProperty()
+
+let oldComponent = switchboard.component
+
+switchboard.component = (wireState, render) => {
+    try {
+        throw new Error()
+    } catch (e) {
+        let result = r.find(Boolean, e.stack.split('\n').map((it) => (/\(([A-z]+)\)\.jsx/).exec(it)))
+
+        if (result) {
+            let [_, name] = result,
+                renderFn = render || wireState
+
+            renderFn.displayName = `${name}:${result.index}`
+        }
+
+        if (render) {
+            return oldComponent((it) => {
+                let state = wireState(it)
+
+                return !state.updateBy
+                    ? { ...state, updateBy: it.propsProperty.skipDuplicates(r.equals) }
+                    : state
+            }, render)
+        } else {
+            return oldComponent(wireState, render)
+        }
+    }
+}
+

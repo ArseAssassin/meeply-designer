@@ -84,6 +84,17 @@ module.exports = switchboard.model(({ signal, slot }) => {
                         : kefir.constant([])
                 )
                 .toProperty(),
+            counts: elements.map((elements) =>
+                threadLast(elements)(
+                    r.filter((it) => !it.template),
+                    r.map(({ id }) => [id, threadLast(elements)(
+                        r.filter((it) => r.contains(id, [it.template, it.id])),
+                        r.map((it) => it.count),
+                        r.reduce((a, b) => a + b, 0)
+                    )]),
+                    r.fromPairs
+                )
+            ),
             createElement: slot('element.create'),
             updateElement: slot('element.update'),
             setCount: slot('element.updateCount'),

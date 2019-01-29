@@ -1,6 +1,6 @@
 require('./file-explorer.styl')
 
-let File = ({ name, children, ...rest }) =>
+let File = ({ name, label, children, ...rest }) =>
     <div className='file-explorer__file' { ...rest }>
         <VGroup modifiers='align-center grow'>
             <div className='file-explorer__file-face' data-group-modifiers='grow'>
@@ -9,7 +9,7 @@ let File = ({ name, children, ...rest }) =>
                 </VGroup>
             </div>
             <div className='file-explorer__file-name'>
-                { name }
+                { label || name }
             </div>
         </VGroup>
     </div>
@@ -57,7 +57,7 @@ module.exports = switchboard.component(
             )
         })
     },
-    ({ wiredState: { path, selected }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers }) => {
+    ({ wiredState: { path, selected }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview }) => {
         let resolvePath = (path, it) =>
                 path.length === 0
                     ? it
@@ -94,12 +94,18 @@ module.exports = switchboard.component(
             <div className={ modifiersToClass('file-explorer', modifiers) }
                  data-group-modifiers='grow'
                  onClick={ (it) => it.target === it.currentTarget && wire('unselect')() }>
-                { contents.map((it, idx) =>
-                    <div key={ idx } className={ modifiersToClass('file-explorer__file-wrapper', selected === idx && 'selected') }
-                         onClick={ r.pipe(r.always(idx), r.tap(onChange || Boolean), wire('select')) }>
-                        { React.cloneElement(it, { navigateToThis: r.pipe(r.always(path.concat(idx)), wire('navigate')) }) }
+                <HGroup modifiers='grow' data-group-modifiers='grow'>
+                    <div className='file-explorer__items' data-group-modifiers='grow'>
+                        { contents.map((it, idx) =>
+                            <div key={ idx } className={ modifiersToClass('file-explorer__file-wrapper', selected === idx && 'selected') }
+                                 onClick={ r.pipe(r.always(idx), r.tap(onChange || Boolean), wire('select')) }>
+                                { React.cloneElement(it, { navigateToThis: r.pipe(r.always(path.concat(idx)), wire('navigate')) }) }
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    { preview }
+                </HGroup>
             </div>
         </VGroup>
     }
@@ -107,7 +113,7 @@ module.exports = switchboard.component(
 
 module.exports.File = File
 
-module.exports.Folder = ({ name, face=<Icon name='folder' />, children, navigateToThis, ...rest }) =>
-    <File name={ name } onDoubleClick={ () => navigateToThis() }>
+module.exports.Folder = ({ name, label, face=<Icon name='folder' />, children, navigateToThis, ...rest }) =>
+    <File name={ name } label={ label } onDoubleClick={ () => navigateToThis() }>
         { face }
     </File>

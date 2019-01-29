@@ -12,7 +12,9 @@ module.exports = switchboard.model(({ signal }) => ({
                 r.toPairs,
                 r.map(([key, value]) => ({
                     name: r.last(key.split('/')),
-                    body: value
+                    body: value,
+                    license:
+                        <Type modifiers='xs'><a href='http://afractalthought.com/fractal-symbols/board-game-library/' target='_blank'>Fractal Symbols</a> by Felix Thålin. Licensed under <a href='https://creativecommons.org/licenses/by/4.0/' target='_blank'>Creative Commons Attrubution 4.0 International</a> license.</Type>
                 }))
             )
         )
