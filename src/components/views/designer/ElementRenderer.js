@@ -1,7 +1,5 @@
-let gameModel = require('model/gameModel.js'),
-
-    { templates } = require('constants/elements.js'),
-    WrappingText = require('components/common/WrappingText.js')
+let WrappingText = require('components/common/WrappingText.js'),
+    resourcesModel = require('model/resourcesModel.js')
 
 
 const TEXT_ALIGN = {
@@ -10,9 +8,22 @@ const TEXT_ALIGN = {
     right: { anchor: 'end', position: (it) => it / 2 }
 }
 
+let Image = switchboard.component(
+    ({ propsProperty }) => ({
+        href:
+            propsProperty
+            .map(r.path(words('layer body')))
+            .thru(resourcesModel.images.getById)
+            .map(r.prop('body'))
+            .skipDuplicates()
+    }),
+    ({ wiredState: { href }, layer: { x, y, width, height } }) =>
+        <image {...{ x, y, width, height, href }} />,
+)
+
 let renderers = {
         'image': (it) =>
-            <image x={ it.x } y={ it.y } href={ it.body.body } width={ it.width } height={ it.height } />,
+            <Image layer={ it } />,
         'text': (it) =>
             <WrappingText
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }

@@ -17,35 +17,19 @@ let File = ({ name, label, children, ...rest }) =>
 module.exports = switchboard.component(
     ({ signal, slot, propsProperty, isAlive }) => {
         let selected = kefir.combine([
-                signal(-1,
+                signal(undefined,
                     slot('select'),
 
-                    slot('unselect'), r.always(-1),
+                    slot('unselect'), r.always(undefined),
 
-                    propsProperty.map(r.prop('defaultValue'))
-                    .filter((it) => it !== undefined),
-
-                    slot('navigate'), r.always(-1)
+                    propsProperty.map(r.prop('defaultValue')).take(1)
+                    .filter((it) => it !== undefined)
                 ),
                 propsProperty.map(r.prop('mustSelect'))
             ])
             .toProperty()
-            .filter(([selection, mustSelect]) => !mustSelect || selection >= 0)
+            .filter(([selection, mustSelect]) => !mustSelect || selection !== undefined)
             .map(r.head)
-
-        kefir.combine(
-            [
-                kefir.fromEvents(document.body, 'keydown')
-                .filter((it) => it.keyCode === 46)
-            ],
-            [
-                propsProperty.map(r.prop('onDelete')),
-                selected
-            ]
-        )
-        .filter(([_, onDelete, selected]) => onDelete && selected > -1)
-        .takeUntilBy(isAlive.filter(r.not))
-        .onValue(([_, onDelete, index]) => onDelete(index))
 
         return ({
             selected,
@@ -58,10 +42,11 @@ module.exports = switchboard.component(
         })
     },
     ({ wiredState: { path, selected }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview }) => {
-        let resolvePath = (path, it) =>
+        let valueEq = r.curry((eq, value) => value.props.value === eq),
+            resolvePath = (path, it) =>
                 path.length === 0
                     ? it
-                    : resolvePath(r.tail(path), React.Children.toArray(it[r.head(path)].props.children)),
+                    : resolvePath(r.tail(path), React.Children.toArray(r.find(valueEq(r.head(path)), it).props.children)),
             contents = resolvePath(path, React.Children.toArray(children))
 
         return <VGroup modifiers='grow'>
@@ -69,7 +54,7 @@ module.exports = switchboard.component(
                 { threadLast(path)(
                     r.reduce((memo, next) => {
                         let lastComponent = r.last(memo),
-                            pathComponent = lastComponent.children[next]
+                            pathComponent = r.find(valueEq(next), lastComponent.children)
 
                         return memo.concat({
                             name: pathComponent.props.name,
@@ -97,9 +82,9 @@ module.exports = switchboard.component(
                 <HGroup modifiers='grow' data-group-modifiers='grow'>
                     <div className='file-explorer__items' data-group-modifiers='grow'>
                         { contents.map((it, idx) =>
-                            <div key={ idx } className={ modifiersToClass('file-explorer__file-wrapper', selected === idx && 'selected') }
-                                 onClick={ r.pipe(r.always(idx), r.tap(onChange || Boolean), wire('select')) }>
-                                { React.cloneElement(it, { navigateToThis: r.pipe(r.always(path.concat(idx)), wire('navigate')) }) }
+                            <div key={ it.props.value } className={ modifiersToClass('file-explorer__file-wrapper', it.props.value === selected && 'selected') }
+                                 onClick={ r.pipe(r.always(it.props.value), r.tap(onChange || Boolean), wire('select')) }>
+                                { React.cloneElement(it, { navigateToThis: r.pipe(r.always(path.concat(it.props.value)), wire('navigate')) }) }
                             </div>
                         )}
                     </div>

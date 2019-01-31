@@ -2,9 +2,9 @@ let { populateTemplate } = require('utils/elementUtils.js'),
     persistentSignal = require('model/persistentSignal.js')
 
 
-let updateElement = (id, fn, it) =>
+let updateElement = (id, fn, it, cascadeChildren=false) =>
     it.map((it) =>
-        it.id === id
+        it.id === id || (cascadeChildren && it.template === id)
             ? { ...it, ...fn(it) }
             : it
     )
@@ -18,7 +18,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
             slot('elements.set'),
 
             slot('element.delete'), (it, id) =>
-                it.filter((it) => it.id !== id),
+                it.filter((it) => it.id !== id || it.template !== id),
 
             slot('element.create'), (it, elem) => it.concat(elem),
             slot('element.updateCount'),
@@ -35,7 +35,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
             (it, [layer, id]) =>
                 updateElement(id, (it) => ({
                     body: it.body.filter((it) => it.id !== layer)
-                }), it),
+                }), it, true),
 
             slot('element.update'),
             (it, [id, body]) =>

@@ -71,7 +71,7 @@ switchboard.component = (wireState, render) => {
         let result = r.find(Boolean, e.stack.split('\n').map((it) => (/\(([A-z]+)\)\.jsx/).exec(it)))
 
         if (result) {
-            let [_, name] = result,
+            let name = result[1],
                 renderFn = render || wireState
 
             renderFn.displayName = `${name}:${result.index}`
@@ -89,5 +89,28 @@ switchboard.component = (wireState, render) => {
             return oldComponent(wireState, render)
         }
     }
+}
+
+let validateObservable = (it) => {
+        if (!it || !it.onAny) {
+            throw new Error('Received invalid observable ' + it || 'undefined')
+        }
+    },
+    oldCombine = kefir.combine,
+    oldMerge = kefir.merge
+
+kefir.combine = function(active, passive, combinator) {
+    active.forEach(validateObservable)
+    if (passive) {
+        passive.forEach(validateObservable)
+    }
+
+    return oldCombine(active, passive, combinator)
+}
+
+kefir.merge = function(observables) {
+    observables.forEach(validateObservable)
+
+    return oldMerge(observables)
 }
 

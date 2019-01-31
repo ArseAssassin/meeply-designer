@@ -8,10 +8,12 @@ let uuid = require('uuid/v4'),
     GameInfo = require('components/views/designer/GameInfo.js'),
     PrintView = require('components/views/print/PrintView.js'),
     Element = require('components/views/designer/Element.js'),
-    gameModel = require('model/gameModel.js'),
     Button = require('components/common/Button.js'),
 
+    gameModel = require('model/gameModel.js'),
+    resourcesModel = require('model/resourcesModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
+
     fileUtils = require('utils/fileUtils.js')
 
 require('./design-view.styl')
@@ -53,9 +55,7 @@ let tabTypes = {
             props: r.always({}),
             label: r.always('Game information')
         }
-    },
-    NewElementTab = (onClose) => () =>
-        <NewElement onSubmit={ onClose } />
+    }
 
 module.exports = switchboard.component(
     ({ signal, slot }) => {
@@ -111,23 +111,36 @@ module.exports = switchboard.component(
 
         kefir.combine(
             [slot('save')],
-            [gameModel.elements.signal]
+            [gameModel.elements.signal, resourcesModel.userImages.signal]
         )
-        .map(r.last)
-        .onValue((it) => fileUtils.save('project.json', it))
+        .onValue(([_, elements, resources]) => fileUtils.save('project.json', {
+            version: 1,
+            elements,
+            resources
+        }))
 
         slot('new')
         .map(r.always([]))
         .to(gameModel.elements.set)
 
+        slot('new')
+        .map(r.always({}))
+        .to(resourcesModel.userImages.set)
+
         slot('open')
         .flatMapLatest(() => fileUtils.load('.json'))
+        .map(r.prop('body'))
         .filter((it) => FILE_REGEX.test(it))
         .map((it) => {
             let matches = it.match(FILE_REGEX),
                 buffer = new Buffer(matches[2], 'base64')
 
             return JSON.parse(buffer.toString())
+        })
+        .thru((it) => {
+            it.map(r.prop('resources')).to(resourcesModel.userImages.set)
+
+            return it.map(r.prop('elements'))
         })
         .to(gameModel.elements.set)
 
@@ -170,10 +183,11 @@ module.exports = switchboard.component(
 
                 slot('tabState.update'),
                 r.merge
-            )
+            ),
+            userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name'))))
         })
     },
-    ({ wiredState: { tabState, decks, selectedTab, tabs, elements, counts }, wire }) =>
+    ({ wiredState: { userImages, tabState, decks, selectedTab, tabs, elements, counts }, wire }) =>
         <div className='design-view'>
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center margin-none'>
@@ -198,6 +212,7 @@ module.exports = switchboard.component(
 
                             { decks.map(({ name, id, ...deck }) =>
                                 <FileExplorer.Folder
+                                    value={ id }
                                     face={
                                         <ElementRenderer
                                             element={ deck }
@@ -211,11 +226,13 @@ module.exports = switchboard.component(
                                             { counts[id] }
                                         </HGroup>
                                     </HGroup> }
+                                    onDelete={ r.pipe(r.always(id), wire('element.delete')) }
                                     name={ name }
                                     key={ id }>
                                     { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
                                         <FileExplorer.File
                                             name={ it.name }
+                                            value={ it.id }
                                             onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
                                             <div className='design-view__file'>
                                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
@@ -243,8 +260,24 @@ module.exports = switchboard.component(
                                 </FileExplorer.Folder>
                             ) }
 
+                            <FileExplorer.Folder
+                                name='Resources'
+                                value='resources'
+                                face={ <Icon name='image' /> }>
+                                { userImages.map((it) =>
+                                    <FileExplorer.File
+                                        value={ it.id }
+                                        key={ it.id }
+                                        name={ it.name }>
+                                        <img src={ it.body } alt='thumbnail' />
+                                    </FileExplorer.File>
+                                ) }
+                            </FileExplorer.Folder>
 
-                            <FileExplorer.File name='Create new deck' onDoubleClick={ wire('elements.new') }>
+                            <FileExplorer.File
+                                value='create'
+                                name='Create new deck'
+                                onDoubleClick={ wire('elements.new') }>
                                 <Icon name='create' />
                             </FileExplorer.File>
                         </FileExplorer>

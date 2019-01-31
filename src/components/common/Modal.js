@@ -15,7 +15,7 @@ module.exports = ({ children, heading, isOpen, onClose }) =>
                         <div className='modal__heading'>
                             <HGroup modifiers='grow align-center justify-space-between'>
                                 { heading }
-                                <a onClick={ onClose }><Icon name='x' /></a>
+                                <a href='#modal' onClick={ r.pipe(cancel, onClose) }><Icon name='x' /></a>
                             </HGroup>
                         </div>
                         <div className='modal__body'>

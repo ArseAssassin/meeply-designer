@@ -23,7 +23,7 @@ module.exports = {
 
                 return (
                     kefir.fromEvents(reader, 'load')
-                    .map(() => reader.result)
+                    .map(() => ({ body: reader.result, name: file.name }))
                 )
             })
         )

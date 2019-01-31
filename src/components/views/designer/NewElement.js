@@ -5,9 +5,6 @@ let uuid = require('uuid/v4'),
     FileExplorer = require('components/common/FileExplorer.js'),
     componentForm = require('wireState/componentForm.js'),
 
-    gameModel = require('model/gameModel.js'),
-
-    { DEFAULT_PPI } = require('constants/units.js'),
     templates = require('constants/templates.js')
 
 
@@ -52,8 +49,8 @@ module.exports = switchboard.component(
                     <Type modifiers='label'>Template</Type>
                     { capture(<FormField.Basic name='template'>
                         <FileExplorer hideBreadcrumbs defaultValue={ formValue.template } mustSelect>
-                            { templates.map((it) =>
-                                <FileExplorer.File key={ it.name } name={ it.name }>
+                            { templates.map((it, idx) =>
+                                <FileExplorer.File key={ it.name } name={ it.name } value={ idx }>
                                     <svg
                                         width='100%'
                                         height='100%'

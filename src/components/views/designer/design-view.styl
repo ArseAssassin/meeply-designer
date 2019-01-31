@@ -3,15 +3,16 @@
     flex-direction column
     align-items stretch
 
-    border-bottom 1px solid darken($grey, 55%)
+    background-color desaturate(lighten($mid-blue, 65%), 40%)
 
     > .tab-bar
         margin-top $base-s
         flex-grow 1
 
-.game-view .file-explorer__file-face svg
-    width 200px
-    height 100%
+.game-view .file-explorer__file-face
+    svg, img
+        width 200px
+        height 100%
 
 .design-view__toolbar
     background-color $white

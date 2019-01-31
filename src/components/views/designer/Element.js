@@ -9,7 +9,6 @@ let uuid = require('uuid/v4'),
     gameModel = require('model/gameModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
 
-    { DEFAULT_PPI } = require('constants/units.js'),
     componentForm = require('wireState/componentForm.js'),
     saveTabState = require('wireState/saveTabState.js')
 
@@ -18,7 +17,7 @@ require('./element.styl')
 let findName = (name, names, index=2) => {
         let proposedName = `${name} #${index}`
 
-        return r.contains(log(proposedName), log(names))
+        return r.contains(proposedName, names)
             ? findName(name, names, index + 1)
             : proposedName
     },
@@ -27,7 +26,7 @@ let findName = (name, names, index=2) => {
 
     FormRenderer = switchboard.component(
         ({ propsProperty, ...rest }) => {
-            let { capture, formValue } = componentForm({
+            let { capture } = componentForm({
                 name: {
                     defaultValue: '',
                     validator: required()
@@ -122,11 +121,6 @@ let findName = (name, names, index=2) => {
     )
 
 const
-    TOOLS = [
-        { name: 'cursor', icon: 'cursor' },
-        { name: 'image', icon: 'image' },
-        { name: 'text', icon: 'type' }
-    ],
     LAYER_ICONS = {
         document: 'file',
         image: 'image',
@@ -138,7 +132,6 @@ module.exports = switchboard.component(
     saveTabState(({ propsProperty, savedSignal, signal, slot }) => {
         let elementId = propsProperty.map(r.prop('id')).skipDuplicates(),
             element = gameModel.elements.findById(elementId),
-            isLocked = element.map(r.prop('isLocked')),
             layers =
                 kefir.combine([element], [element])
                 .map(([it, element]) =>
@@ -162,13 +155,6 @@ module.exports = switchboard.component(
                     layers.map(r.map(r.prop('id')))
                     .skipDuplicates(r.equals)
                     .slidingWindow(2, 2)
-                    .map(r.pipe(r.apply(r.difference), r.head))
-                    .filter(Boolean)
-                    .onValue(Boolean),
-
-                    layers.map(r.map(r.prop('id')))
-                    .skipDuplicates(r.equals)
-                    .slidingWindow(2, 2)
                     .map(r.pipe(r.reverse, r.apply(r.difference), r.head))
                     .filter(Boolean)
                 ),
@@ -183,7 +169,7 @@ module.exports = switchboard.component(
                                 : it.template === id || it.id === id
                         ),
                         r.map((it) => ({ ...it, template: it.template || '' })),
-                        r.sortBy(r.prop('template'))
+                        r.sortWith([r.ascend(r.prop('template')), r.ascend(r.prop('name'))])
                     ))
                 )
                 .flatMapLatest((deck) =>
@@ -246,7 +232,7 @@ module.exports = switchboard.component(
                 name: 'Image',
                 width: 150,
                 height: 100,
-                body: { name: '' },
+                body: undefined,
                 x: 0,
                 y: 0,
                 id: uuid()
@@ -293,40 +279,23 @@ module.exports = switchboard.component(
             [slot('layers.delete')],
             [elementId, selectedLayer]
         )
-        .filter(([_, _0, selectedLayer]) => selectedLayer !== 'document')
+        .filter(([_, _0, selectedLayer]) => selectedLayer !== DOCUMENT)
         .map(([_, elementId, selectedLayer]) => [selectedLayer, elementId])
         .to(gameModel.elements.deleteLayer)
 
         kefir.combine(
-            [slot('layers.delete')],
-            [propsProperty, elementId, deck, selectedLayer]
+            [slot('file.change').filter((it) => it !== 'create')],
+            [propsProperty]
         )
-        .filter(r.pipe(r.last, r.equals(DOCUMENT)))
-        .onValue(([_, { onFileChange }, elementId, deck]) =>
-            onFileChange(deck[r.findIndex(r.propEq('id', elementId), deck) - 1].id)
-        )
-
-        kefir.combine(
-            [slot('layers.delete')],
-            [elementId, selectedLayer]
-        )
-        .filter(([_, _0, selectedLayer]) => selectedLayer === 'document')
-        .map(([_, elementId]) => elementId)
-        .to(gameModel.elements.deleteElement)
-
-        kefir.combine(
-            [slot('file.change')],
-            [deck, propsProperty]
-        )
-        .onValue(([index, deck, { onFileChange }]) =>
-            deck[index] && onFileChange(deck[index].id)
+        .onValue(([it, { onFileChange }]) =>
+            onFileChange(it)
         )
 
         kefir.combine(
             [slot('form.update')],
             [elementId, selectedLayer]
         )
-        .filter(([_, _0, type]) => type === 'document')
+        .filter(([_, _0, type]) => type === DOCUMENT)
         .map(r.pipe(r.take(2), r.reverse))
         .to(gameModel.elements.updateElement)
 
@@ -334,7 +303,7 @@ module.exports = switchboard.component(
             [slot('form.update')],
             [elementId, selectedLayer]
         )
-        .filter(([_, _0, type]) => type !== 'document')
+        .filter(([_, _0, type]) => type !== DOCUMENT)
         .map(r.reverse)
         .to(gameModel.elements.updateLayer)
 
@@ -402,16 +371,17 @@ module.exports = switchboard.component(
                         mustSelect
                         hideBreadcrumbs
                         onChange={ wire('file.change') }
-                        defaultValue={ r.findIndex(r.propEq('id', element.id), deck) }>
+                        defaultValue={ element.id }>
                         { deck.map((it) =>
-                            <FileExplorer.File name={ it.name }>
+                            <FileExplorer.File name={ it.name } value={ it.id }>
                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
                             </FileExplorer.File>
                         ) }
 
                         <FileExplorer.File
                             name='Create element'
-                            onDoubleClick={ wire('deck.add') }>
+                            onDoubleClick={ wire('deck.add') }
+                            value='create'>
                             <Icon name='create' />
                         </FileExplorer.File>
                     </FileExplorer>
@@ -476,7 +446,7 @@ module.exports = switchboard.component(
                                 <button
                                     disabled={
                                         element.template
-                                            ? !(selectedLayer === DOCUMENT || !getLayer(selectedLayer, layers).isLinked)
+                                            ? selectedLayer === DOCUMENT || getLayer(selectedLayer, layers).isLinked
                                             : selectedLayer === DOCUMENT
                                     }
                                     className='element-view__tool'
