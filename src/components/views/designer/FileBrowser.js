@@ -18,7 +18,7 @@ module.exports = switchboard.component(
                     propsProperty.map(r.prop('value')),
 
                     slot('image.choose')
-                    .filter((it) => !r.contains(it, words('fractal-symbols upload')))
+                    .filter((it) => !r.contains(it, words('fractal-symbols upload')) && !r.contains('game-icons', it))
                 )
                 .thru(resourcesModel.images.getById)
                 .map((it) => it || {}),
@@ -87,8 +87,33 @@ module.exports = switchboard.component(
                                             </VGroup>
                                         </div>
                                 }>
+                                <FileExplorer.Folder name='Game Icons' value='game-icons'>
+                                    { threadLast(libraryImages)(
+                                        r.filter((it) => it.source === 'game-icons.net'),
+                                        r.groupBy((it) => it.name[0].toUpperCase()),
+                                        r.toPairs,
+                                        r.map(([folder, items]) =>
+                                            <FileExplorer.Folder
+                                                key={ folder }
+                                                name={ folder }
+                                                value={ 'game-icons' + folder }>
+                                                { items.map((it) =>
+                                                    <FileExplorer.File
+                                                        value={ it.id }
+                                                        name={ it.name }
+                                                        key={ it.id }
+                                                        onDoubleClick={ () => save(it.id) }>
+                                                        <img src={ it.body } alt='thumbnail' />
+                                                    </FileExplorer.File>
+                                                )}
+                                            </FileExplorer.Folder>
+                                        ),
+                                        r.unnest
+                                    ) }
+                                </FileExplorer.Folder>
+
                                 <FileExplorer.Folder name='Fractal Symbols' value='fractal-symbols'>
-                                    { libraryImages.map((it) =>
+                                    { libraryImages.filter((it) => it.source === 'Fractal Icons').map((it) =>
                                         <FileExplorer.File
                                             value={ it.id }
                                             name={ it.name }

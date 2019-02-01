@@ -1,6 +1,7 @@
 let uuid = require('uuid/v4'),
 
     TabBar = require('components/common/TabBar.js'),
+    Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
@@ -191,14 +192,32 @@ module.exports = switchboard.component(
                 slot('tabState.update'),
                 r.merge
             ),
-            userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name'))))
+            userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
+            isNewConfirmationOpen: signal(
+                false,
+
+                slot('new.toggle'), r.not
+            )
         })
     },
-    ({ wiredState: { userImages, tabState, decks, selectedTab, tabs, elements, counts }, wire }) =>
+    ({ wiredState: { userImages, tabState, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen }, wire }) =>
         <div className='design-view'>
+            <Modal isOpen={ isNewConfirmationOpen } onClose={ wire('new.toggle') } heading='Create new project'>
+                <VGroup>
+                    <Type modifiers='align-center'>
+                        Are you sure you want to create a new project? All unsaved changes will be lost.
+                    </Type>
+
+                    <HGroup modifiers='margin-s justify-end align-center'>
+                        <button onClick={ wire('new.toggle') }>Cancel</button>
+                        <button onClick={ r.pipe(r.tap(wire('new.toggle')), wire('new')) }>Create new project</button>
+                    </HGroup>
+                </VGroup>
+            </Modal>
+
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center margin-none'>
-                    <Button modifiers='s' onClick={ wire('new') }><Icon name='document' /></Button>
+                    <Button modifiers='s' onClick={ wire('new.toggle') }><Icon name='document' /></Button>
                     <Button modifiers='s' onClick={ wire('open') }><Icon name='folder' /></Button>
                     <Button modifiers='s' onClick={ wire('save') }><Icon name='save' /></Button>
                     <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
