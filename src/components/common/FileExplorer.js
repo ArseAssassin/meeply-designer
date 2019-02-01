@@ -1,4 +1,5 @@
-let Button = require('components/common/Button.js')
+let Button = require('components/common/Button.js'),
+    Modal = require('components/common/Modal.js')
 
 require('./file-explorer.styl')
 
@@ -19,7 +20,11 @@ let File = ({ name, label, children, ...rest }) =>
     resolvePath = (path, it) =>
         path.length === 0
             ? it
-            : resolvePath(r.tail(path), React.Children.toArray(r.find(valueEq(r.head(path)), it).props.children))
+            :
+            resolvePath(
+                r.tail(path),
+                React.Children.toArray(r.pathOr(it, words('props children'), r.find(valueEq(r.head(path)), it)))
+            )
 
 module.exports = switchboard.component(
     ({ signal, slot, propsProperty, isAlive }) => {
@@ -55,7 +60,7 @@ module.exports = switchboard.component(
                 )
 
         kefir.combine(
-            [slot('delete')],
+            [slot('delete.confirm')],
             [selectedComponent.map(r.path(words('props onDelete')))]
         )
         .filter(r.last)
@@ -64,10 +69,15 @@ module.exports = switchboard.component(
         return ({
             selected,
             selectedComponent,
+            isDeleting: signal(
+                false,
+
+                slot('delete.toggle'), r.not
+            ),
             path
         })
     },
-    ({ wiredState: { path, selected, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete }) => {
+    ({ wiredState: { path, isDeleting, selected, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete }) => {
         let contents = resolvePath(path, React.Children.toArray(children))
 
         return <VGroup modifiers='grow margin-s'>
@@ -76,6 +86,10 @@ module.exports = switchboard.component(
                     r.reduce((memo, next) => {
                         let lastComponent = r.last(memo),
                             pathComponent = r.find(valueEq(next), lastComponent.children)
+
+                        if (!pathComponent) {
+                            return memo
+                        }
 
                         return memo.concat({
                             name: pathComponent.props.name,
@@ -101,7 +115,7 @@ module.exports = switchboard.component(
                 <div className='file-explorer__toolbar'>
                     <HGroup>
                         <Button
-                            onClick={ wire('delete') }
+                            onClick={ wire('delete.toggle') }
                             disabled={ !selectedComponent || !selectedComponent.props.onDelete }>
                             <Icon name='trash' />
                         </Button>
@@ -112,6 +126,21 @@ module.exports = switchboard.component(
             <div className={ modifiersToClass('file-explorer', modifiers) }
                  data-group-modifiers='grow'
                  onClick={ (it) => it.target === it.currentTarget && wire('unselect')() }>
+                <Modal isOpen={ isDeleting } heading='Confirm delete' onClose={ wire('delete.toggle') }>
+                    <VGroup>
+                        <div className='file-explorer__delete-confirm'>
+                            <Type modifiers='align-center'>
+                                { selectedComponent && selectedComponent.props.deleteText }
+                            </Type>
+                        </div>
+
+                        <HGroup modifiers='grow justify-end align-center margin-s'>
+                            <button onClick={ wire('delete.toggle') }>Cancel</button>
+                            <button onClick={ r.pipe(r.tap(wire('delete.toggle')), wire('delete.confirm')) }>Delete</button>
+                        </HGroup>
+                    </VGroup>
+                </Modal>
+
                 <HGroup modifiers='grow' data-group-modifiers='grow'>
                     <div className='file-explorer__items' data-group-modifiers='grow'>
                         { contents.map((it, idx) =>

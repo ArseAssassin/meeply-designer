@@ -101,7 +101,7 @@ module.exports = switchboard.component(
                     [gameModel.elements.signal]
                 ),
                 (it, [elementId, elements]) =>
-                    r.find(r.propEq('id', elementId), it)
+                    r.find(r.propEq('id', elementId), it.map(r.prop('props')))
                         ? it
                         : it.concat({
                             id: elementId,
@@ -170,7 +170,7 @@ module.exports = switchboard.component(
                             [slot('elements.open')],
                             [tabs]
                         )
-                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs) + 1)
+                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs.map(r.prop('props'))) + 1)
 
                     ),
                     tabs.map(r.prop('length')).skipDuplicates()
@@ -232,6 +232,7 @@ module.exports = switchboard.component(
                                         </HGroup>
                                     </HGroup> }
                                     onDelete={ onDelete(id) }
+                                    deleteText='Deleting this component will delete the whole deck. Are you sure you want to continue?'
                                     name={ name }
                                     key={ id }>
                                     { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
@@ -239,6 +240,11 @@ module.exports = switchboard.component(
                                             name={ it.name }
                                             value={ it.id }
                                             onDelete={ onDelete(it.id) }
+                                            deleteText={
+                                                !it.template
+                                                    ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
+                                                    : 'Are you sure you want to delete this component? This action can not be undone.'
+                                            }
                                             onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
                                             <div className='design-view__file'>
                                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
@@ -276,6 +282,7 @@ module.exports = switchboard.component(
                                             value={ it.id }
                                             key={ it.id }
                                             onDelete={ onDelete(it.id, true) }
+                                            deleteText='Are you sure you want to delete this resource? All images using it will be reset.'
                                             name={ it.name }>
                                             <img src={ it.body } alt='thumbnail' />
                                         </FileExplorer.File>

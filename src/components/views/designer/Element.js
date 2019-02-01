@@ -394,6 +394,11 @@ module.exports = switchboard.component(
                                 key={ it.id }
                                 name={ it.name }
                                 onDelete={ r.pipe(r.always(it.id), wire(slot('element.delete'))) }
+                                deleteText={
+                                    !element.template
+                                        ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
+                                        : 'Are you sure you want to delete this component? This action can not be undone.'
+                                }
                                 value={ it.id }>
                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
                             </FileExplorer.File>
