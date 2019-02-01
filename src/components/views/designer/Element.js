@@ -41,11 +41,9 @@ let findName = (name, names, index=2) => {
 
             return { capture }
         },
-        ({ wiredState: { capture }, wire, layer }) =>
+        ({ wiredState: { capture }, wire, layer, isSlave }) =>
             <div className='element-view__layer-form'>
                 <VGroup>
-                    <Type modifiers='heading'>Edit layer</Type>
-
                     {layer.type === 'text' && capture(<FormField name='body'>
                         <Input.Textarea />
                     </FormField>)}
@@ -56,9 +54,12 @@ let findName = (name, names, index=2) => {
                         </FormField.Basic>)
                     }
 
-                    { capture(<FormField name='name'>
-                        <Input.Text label='Name' />
-                    </FormField>) }
+                    { layer.type
+                        ? capture(<FormField name='name'>
+                            <Input.Text label='Layer name' disabled={ isSlave } />
+                        </FormField>)
+                        : <Type modifiers='s heading'>{ layer.name }</Type>
+                    }
 
                     { layer.type &&
                         <HGroup modifers='align-center margin-s'>
@@ -78,15 +79,20 @@ let findName = (name, names, index=2) => {
                         </HGroup>
                     }
 
-                    <HGroup modifiers='align-center margin-s'>
-                        { capture(<FormField name='width'>
-                            <Input.Number modifiers='number' />
-                        </FormField>) }
-                        x
-                        { capture(<FormField name='height'>
-                            <Input.Number modifiers='number' />
-                        </FormField>) }
-                        px
+                    <HGroup modifiers='align-center'>
+                        <HGroup modifiers='margin-xs'>
+                            w
+                            { capture(<FormField name='width'>
+                                <Input.Number modifiers='number' />
+                            </FormField>) }
+                        </HGroup>
+
+                        <HGroup modifiers='margin-xs'>
+                            h
+                            { capture(<FormField name='height'>
+                                <Input.Number modifiers='number' />
+                            </FormField>) }
+                        </HGroup>
                     </HGroup>
 
                     { layer.type === 'text' &&
@@ -443,7 +449,10 @@ module.exports = switchboard.component(
                 <VGroup modifiers='grow'>
                     <div className='element-view__toolbar-panel'>
                         { ((layer) =>
-                            <FormRenderer onUpdate={ wire('form.update') } layer={ layer.type === 'document' ? element : layer } />
+                            <FormRenderer
+                                isSlave={ element.template }
+                                onUpdate={ wire('form.update') }
+                                layer={ layer.type === 'document' ? element : layer } />
                         )(r.find(r.propEq('id', selectedLayer), layers)) }
                     </div>
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>

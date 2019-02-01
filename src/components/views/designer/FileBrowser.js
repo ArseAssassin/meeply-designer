@@ -48,16 +48,20 @@ module.exports = switchboard.component(
 
                 propsProperty.map(r.prop('value')).filter(r.not).take(1), r.T
             ),
+            imageName:
+                propsProperty.map(r.prop('value'))
+                .thru(resourcesModel.images.getById)
+                .map(r.propOr('', 'name')),
             userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
             libraryImages: resourcesModel.libraryImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
             chosenImage
         })
     },
-    ({ wiredState: { save, chosenImage, userImages, libraryImages, isOpen }, wire, value, onChange }) => {
+    ({ wiredState: { save, chosenImage, imageName, userImages, libraryImages, isOpen }, wire, value, onChange }) => {
         return <VGroup modifiers='margin-s'>
             <div onClick={ wire('toggle') }>
                 <VGroup modifiers='margin-s'>
-                    <Type modifiers='s'>{ chosenImage.name }</Type>
+                    <Type modifiers='s'>{ imageName }</Type>
                     <button>Browse...</button>
                 </VGroup>
             </div>
