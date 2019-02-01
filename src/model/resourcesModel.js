@@ -61,6 +61,15 @@ module.exports = switchboard.model(({ signal, slot }) => {
                     })
                 },
 
+                slot('userImages.update'),
+                (it, [id, body]) => ({
+                    ...it,
+                    [id]: {
+                        ...it[id],
+                        ...body
+                    }
+                }),
+
                 slot('userImages.set'),
 
                 slot('userImages.delete'),
@@ -75,6 +84,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
             signal: userImages,
             set: slot('userImages.set'),
             upload: slot('userImages.upload'),
+            update: slot('userImages.update'),
             delete: slot('userImages.delete')
         },
         images: {

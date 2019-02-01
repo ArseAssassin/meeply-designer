@@ -1,10 +1,10 @@
 require('./input.styl')
 
 module.exports = {
-    Text: ({ label, modifiers='', ...rest }) =>
+    Text: ({ label, modifiers='', _ref, ...rest }) =>
         <VGroup modifiers='margin-s'>
             { label && <span className='input__label'>{ label }</span> }
-            <input className={ modifiersToClass('input', modifiers) } { ...rest } />
+            <input ref={ _ref } className={ modifiersToClass('input', modifiers) } { ...rest } />
         </VGroup>,
     Textarea: ({ label, modifiers='', ...rest }) =>
         <VGroup modifiers='margin-s'>

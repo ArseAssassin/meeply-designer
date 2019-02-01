@@ -1,4 +1,5 @@
-let gameModel = require('model/gameModel.js')
+let gameModel = require('model/gameModel.js'),
+    Input = require('components/common/Input.js')
 
 module.exports = switchboard.component(
     ({ signal, slot }) => {
@@ -12,11 +13,14 @@ module.exports = switchboard.component(
                             r.map((it) => it.count),
                             r.reduce((a, b) => a + b, 0)
                         )])
-                )
+                ),
+            gameName:
+                gameModel.name.signal
         })
     },
-    ({ wiredState: { decks }, wire }) =>
+    ({ wiredState: { gameName, decks }, wire }) =>
         <VGroup>
+            <Input.Text label='Name' value={ gameName } onChange={ r.pipe(r.path(words('target value')), wire(gameModel.name.update)) } />
             <Type modifiers='heading'>Game pieces</Type>
 
             { decks.map(([id, name, count]) =>

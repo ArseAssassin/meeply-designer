@@ -60,7 +60,12 @@ let tabTypes = {
     onDelete = (id, isImage) => r.pipe(
         r.always(id),
         switchboard.slot.toFn(isImage ? resourcesModel.userImages.delete : gameModel.elements.deleteElement)
-    )
+    ),
+    onRename = (id, isImage) => (name) =>
+        switchboard.slot.toFn(isImage ? resourcesModel.userImages.update : gameModel.elements.updateElement)([
+            id,
+            { name }
+        ])
 
 module.exports = switchboard.component(
     ({ signal, slot }) => {
@@ -119,17 +124,21 @@ module.exports = switchboard.component(
 
         kefir.combine(
             [slot('save')],
-            [gameModel.elements.signal, resourcesModel.userImages.signal]
+            [gameModel.elements.signal, resourcesModel.userImages.signal, gameModel.name.signal]
         )
-        .onValue(([_, elements, resources]) => fileUtils.save('project.json', {
+        .onValue(([_, elements, resources, name]) => fileUtils.save(name + '.json', {
             version: 1,
             elements,
-            resources
+            resources,
+            name
         }))
 
         slot('new')
         .map(r.always([]))
         .to(gameModel.elements.set)
+
+        slot('new')
+        .to(gameModel.name.reset)
 
         slot('new')
         .map(r.always({}))
@@ -147,6 +156,7 @@ module.exports = switchboard.component(
         })
         .thru((it) => {
             it.map(r.prop('resources')).to(resourcesModel.userImages.set)
+            it.map(r.prop('name')).to(gameModel.name.update)
 
             return it.map(r.prop('elements'))
         })
@@ -197,10 +207,11 @@ module.exports = switchboard.component(
                 false,
 
                 slot('new.toggle'), r.not
-            )
+            ),
+            gameName: gameModel.name.signal
         })
     },
-    ({ wiredState: { userImages, tabState, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen }, wire }) =>
+    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen }, wire }) =>
         <div className='design-view'>
             <Modal isOpen={ isNewConfirmationOpen } onClose={ wire('new.toggle') } heading='Create new project'>
                 <VGroup>
@@ -227,7 +238,7 @@ module.exports = switchboard.component(
             </div>
 
             <TabBar selected={ selectedTab } onSelect={ wire('tabs.select') } onClose={ wire('tabs.close') }>
-                <TabBar.Tab label='Game 1' closingDisabled>
+                <TabBar.Tab label={ gameName } closingDisabled>
                     <div className='game-view'>
                         <FileExplorer
                             rootName='/'
@@ -251,6 +262,7 @@ module.exports = switchboard.component(
                                         </HGroup>
                                     </HGroup> }
                                     onDelete={ onDelete(id) }
+                                    onRename={ onRename(id) }
                                     deleteText='Deleting this component will delete the whole deck. Are you sure you want to continue?'
                                     name={ name }
                                     key={ id }>
@@ -259,6 +271,7 @@ module.exports = switchboard.component(
                                             name={ it.name }
                                             value={ it.id }
                                             onDelete={ onDelete(it.id) }
+                                            onRename={ onRename(it.id) }
                                             deleteText={
                                                 !it.template
                                                     ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
@@ -301,6 +314,7 @@ module.exports = switchboard.component(
                                             value={ it.id }
                                             key={ it.id }
                                             onDelete={ onDelete(it.id, true) }
+                                            onRename={ onRename(it.id, true) }
                                             deleteText='Are you sure you want to delete this resource? All images using it will be reset.'
                                             name={ it.name }>
                                             <img src={ it.body } alt='thumbnail' />

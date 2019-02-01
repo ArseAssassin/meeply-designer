@@ -74,6 +74,18 @@ module.exports = switchboard.model(({ signal, slot }) => {
             .toProperty()
 
     return ({
+        name: {
+            signal: persistentSignal(signal)(
+                'project-name',
+
+                'Game 1',
+
+                slot('name.update'),
+                slot('name.reset'), r.always('Game 1')
+            ),
+            update: slot('name.update'),
+            reset: slot('name.reset')
+        },
         elements: {
             signal: elements,
             findById,

@@ -92,14 +92,14 @@ module.exports = switchboard.component(
                                         ) } />
                                 </HGroup>
 
-                                <Input.Text
+                                { /* <Input.Text
                                     placeholder='Filter deck'
                                     onChange={ r.pipe(
                                         r.path(words('target value')),
                                         (it) => ({ [id]: it }),
                                         wire('filters.update')
                                     )}
-                                    value={ filters[id] || '' }/>
+                                    value={ filters[id] || '' }/> */ }
                                 </VGroup>
 
                             <button>Draw</button>

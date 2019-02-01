@@ -395,6 +395,7 @@ module.exports = switchboard.component(
                                 key={ it.id }
                                 name={ it.name }
                                 onDelete={ r.pipe(r.always(it.id), wire(slot('element.delete'))) }
+                                onRename={ (name) => wire(gameModel.elements.updateElement)([it.id, { name }]) }
                                 deleteText={
                                     !element.template
                                         ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
