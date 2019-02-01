@@ -27,7 +27,7 @@ let tabTypes = {
                 ...props,
                 onFileChange: r.pipe(r.pair(idx), wire('tab.change'))
             }),
-            label: ({ id }, elements) => r.find(r.propEq('id', id), elements).name
+            label: ({ id }, elements) => (r.find(r.propEq('id', id), elements) || {}).name
         },
         newElement: {
             component: NewElement,
@@ -55,7 +55,11 @@ let tabTypes = {
             props: r.always({}),
             label: r.always('Game information')
         }
-    }
+    },
+    onDelete = (id, isImage) => r.pipe(
+        r.always(id),
+        switchboard.slot.toFn(isImage ? resourcesModel.userImages.delete : gameModel.elements.deleteElement)
+    )
 
 module.exports = switchboard.component(
     ({ signal, slot }) => {
@@ -106,7 +110,10 @@ module.exports = switchboard.component(
                         }),
 
                 slot('tabs.close'),
-                (it, idx) => r.remove(idx - 1, 1, it)
+                (it, idx) => r.remove(idx - 1, 1, it),
+
+                gameModel.elements.signal.map(r.map(r.prop('id'))).skipDuplicates(r.equals),
+                (it, ids) => it.filter((it) => it.component !== 'element' || r.contains(it.props.id, ids))
             )
 
         kefir.combine(
@@ -205,10 +212,8 @@ module.exports = switchboard.component(
                     <div className='game-view'>
                         <FileExplorer
                             rootName='/'
-                            onDelete={ r.pipe(
-                                (it) => elements[it].id,
-                                wire(gameModel.elements.deleteElement)
-                            ) }>
+                            toolbarEnabled
+                            canDelete={ (it) => it && !r.contains(it, words('create resources')) }>
 
                             { decks.map(({ name, id, ...deck }) =>
                                 <FileExplorer.Folder
@@ -226,13 +231,14 @@ module.exports = switchboard.component(
                                             { counts[id] }
                                         </HGroup>
                                     </HGroup> }
-                                    onDelete={ r.pipe(r.always(id), wire('element.delete')) }
+                                    onDelete={ onDelete(id) }
                                     name={ name }
                                     key={ id }>
                                     { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
                                         <FileExplorer.File
                                             name={ it.name }
                                             value={ it.id }
+                                            onDelete={ onDelete(it.id) }
                                             onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
                                             <div className='design-view__file'>
                                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
@@ -260,19 +266,23 @@ module.exports = switchboard.component(
                                 </FileExplorer.Folder>
                             ) }
 
-                            <FileExplorer.Folder
-                                name='Resources'
-                                value='resources'
-                                face={ <Icon name='image' /> }>
-                                { userImages.map((it) =>
-                                    <FileExplorer.File
-                                        value={ it.id }
-                                        key={ it.id }
-                                        name={ it.name }>
-                                        <img src={ it.body } alt='thumbnail' />
-                                    </FileExplorer.File>
-                                ) }
-                            </FileExplorer.Folder>
+                            { userImages.length
+                                ? <FileExplorer.Folder
+                                    name='Resources'
+                                    value='resources'
+                                    face={ <Icon name='image' /> }>
+                                    { userImages.map((it) =>
+                                        <FileExplorer.File
+                                            value={ it.id }
+                                            key={ it.id }
+                                            onDelete={ onDelete(it.id, true) }
+                                            name={ it.name }>
+                                            <img src={ it.body } alt='thumbnail' />
+                                        </FileExplorer.File>
+                                    ) }
+                                </FileExplorer.Folder>
+                                : null
+                            }
 
                             <FileExplorer.File
                                 value='create'

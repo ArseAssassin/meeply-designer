@@ -43,7 +43,10 @@ module.exports = switchboard.model(({ signal, slot }) => {
                     })
                 },
 
-                slot('userImages.set')
+                slot('userImages.set'),
+
+                slot('userImages.delete'),
+                (it, id) => r.dissoc(id, it)
             )
 
     return {
@@ -53,7 +56,8 @@ module.exports = switchboard.model(({ signal, slot }) => {
         userImages: {
             signal: userImages,
             set: slot('userImages.set'),
-            upload: slot('userImages.upload')
+            upload: slot('userImages.upload'),
+            delete: slot('userImages.delete')
         },
         images: {
             getById: (it) =>

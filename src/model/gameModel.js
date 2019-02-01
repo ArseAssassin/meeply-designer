@@ -18,7 +18,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
             slot('elements.set'),
 
             slot('element.delete'), (it, id) =>
-                it.filter((it) => it.id !== id || it.template !== id),
+                it.filter((it) => it.id !== id && it.template !== id),
 
             slot('element.create'), (it, elem) => it.concat(elem),
             slot('element.updateCount'),

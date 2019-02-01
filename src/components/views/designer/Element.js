@@ -169,7 +169,7 @@ module.exports = switchboard.component(
                                 : it.template === id || it.id === id
                         ),
                         r.map((it) => ({ ...it, template: it.template || '' })),
-                        r.sortWith([r.ascend(r.prop('template')), r.ascend(r.prop('name'))])
+                        r.sortWith([r.ascend(r.prop('template'))])
                     ))
                 )
                 .flatMapLatest((deck) =>
@@ -307,6 +307,22 @@ module.exports = switchboard.component(
         .map(r.reverse)
         .to(gameModel.elements.updateLayer)
 
+        kefir.combine(
+            [slot('element.delete')],
+            [deck, propsProperty]
+        )
+        .onValue(([id, deck, { onFileChange }]) => {
+            let index = r.findIndex(r.propEq('id', id), deck),
+                nextIndex =
+                    index === deck.length - 1
+                        ? index - 1
+                        : index + 1
+
+            onFileChange(deck[nextIndex].id)
+        })
+        .map(r.head)
+        .to(gameModel.elements.deleteElement)
+
         return ({
             element,
             zoomLevel,
@@ -361,7 +377,7 @@ module.exports = switchboard.component(
             )
         })
     }),
-    ({ wiredState: { deckShown, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
+    ({ wiredState: { deckShown, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire, slot }) =>
         <div className='element-view'>
             <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>
                 <button className='element-view__tab' onClick={ wire('deck.toggle') }>Deck</button>
@@ -370,10 +386,15 @@ module.exports = switchboard.component(
                     <FileExplorer
                         mustSelect
                         hideBreadcrumbs
+                        toolbarEnabled
                         onChange={ wire('file.change') }
                         defaultValue={ element.id }>
                         { deck.map((it) =>
-                            <FileExplorer.File name={ it.name } value={ it.id }>
+                            <FileExplorer.File
+                                key={ it.id }
+                                name={ it.name }
+                                onDelete={ r.pipe(r.always(it.id), wire(slot('element.delete'))) }
+                                value={ it.id }>
                                 <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
                             </FileExplorer.File>
                         ) }
