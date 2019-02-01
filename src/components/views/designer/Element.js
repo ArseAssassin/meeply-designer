@@ -203,7 +203,7 @@ module.exports = switchboard.component(
                         slot('zoom')
                         .throttle(1000 / 5),
 
-                        slot('zoom.button')
+                        slot('zoom.click')
                     ])
                     .map((it) => Math.sign(it) * -1),
                     (it, deltaY) => Math.max(0.25, it + deltaY * 0.25)
@@ -432,9 +432,12 @@ module.exports = switchboard.component(
             <div className='element-view__designer' ref={ wire('ref') }>
                 <div className='element-view__zoom-level'>
                     <HGroup modifiers='margin-s align-center'>
-                        <Button modifiers='s' onClick={ r.pipe(r.always(-1), wire('zoom.click')) }>-</Button>
-                        <Type modifiers='s'>{ zoomLevel * 100 }%</Type>
-                        <Button modifiers='s' onClick={ r.pipe(r.always(1), wire('zoom.click')) }>+</Button>
+                        <Button modifiers='s' onClick={ r.pipe(r.always(1), wire('zoom.click')) }>-</Button>
+                        <HGroup modifiers='margin-xs align-center'>
+                            <Icon name='zoom' modifiers='s' />
+                            <Type modifiers='s'>{ zoomLevel * 100 }%</Type>
+                        </HGroup>
+                        <Button modifiers='s' onClick={ r.pipe(r.always(-1), wire('zoom.click')) }>+</Button>
                     </HGroup>
                 </div>
                 <ElementRenderer
