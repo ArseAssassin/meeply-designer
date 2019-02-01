@@ -8,6 +8,17 @@
     display flex
     flex-direction row
 
+.element-view__designer
+    flex-grow 1
+    overflow hidden
+    position relative
+
+.element-view__zoom-level
+    position absolute
+    right 0
+    top 0
+    background-color $white
+
 .element-view .element
     background-color $grey
     cursor default
@@ -46,7 +57,7 @@
         visibility hidden
 
 .element-view__deck--shown
-    width 300px
+    width 200px
 
     > .group
         visibility visible

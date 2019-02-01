@@ -5,6 +5,7 @@ let uuid = require('uuid/v4'),
     FormField = require('components/forms/FormField.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
+    Button = require('components/common/Button.js'),
     FileBrowser = require('components/views/designer/FileBrowser.js'),
     gameModel = require('model/gameModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
@@ -198,10 +199,14 @@ module.exports = switchboard.component(
                 savedSignal('zoomLevel')(
                     1,
 
-                    slot('zoom')
-                    .throttle(1000 / 5)
+                    kefir.merge([
+                        slot('zoom')
+                        .throttle(1000 / 5),
+
+                        slot('zoom.button')
+                    ])
                     .map((it) => Math.sign(it) * -1),
-                    (it, deltaY) => it + deltaY * 0.25
+                    (it, deltaY) => Math.max(0.25, it + deltaY * 0.25)
                 ),
 
             offset = savedSignal('offset')(
@@ -357,11 +362,13 @@ module.exports = switchboard.component(
                             })
                             .skipDuplicates(r.equals),
 
-                            element
+                            element,
+
+                            zoomLevel
                         ])
-                        .map(([[width, height], element]) => {
-                            let x = element.width / 2 - width / 2,
-                                y = element.height / 2 - height / 2.5
+                        .map(([[width, height], element, zoomLevel]) => {
+                            let x = element.width / 2 - (width / zoomLevel) / 2,
+                                y = element.height / 2 - (height / zoomLevel) / 2.5
 
                             return [x, y, width, height]
                         })
@@ -422,28 +429,36 @@ module.exports = switchboard.component(
                 </div>
             </div>
 
-            <ElementRenderer
-                modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
-                debounceUpdates={ 0 }
-                element={ element }
-                zoomLevel={ zoomLevel }
-                viewBox={
-                    r.zip(
-                        canvasSize,
+            <div className='element-view__designer' ref={ wire('ref') }>
+                <div className='element-view__zoom-level'>
+                    <HGroup modifiers='margin-s align-center'>
+                        <Button modifiers='s' onClick={ r.pipe(r.always(-1), wire('zoom.click')) }>-</Button>
+                        <Type modifiers='s'>{ zoomLevel * 100 }%</Type>
+                        <Button modifiers='s' onClick={ r.pipe(r.always(1), wire('zoom.click')) }>+</Button>
+                    </HGroup>
+                </div>
+                <ElementRenderer
+                    modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
+                    debounceUpdates={ 0 }
+                    element={ element }
+                    zoomLevel={ zoomLevel }
+                    viewBox={
+                        r.zip(
+                            canvasSize,
 
-                        offset.map((it) => (a) => a + it)
-                        .concat(r.repeat((a) => a / zoomLevel, 2))
-                    )
-                    .map(([it, fn]) => fn(it))
-                    .join(' ')
-                }
-                onLayerInteract={ wire('layer.interact') }
-                onClick={ r.pipe(r.always(DOCUMENT), wire('layer.select')) }
-                onMouseDown={ documentMode && wire('grab.start') }
-                onMouseWheel={ r.pipe(r.prop('deltaY'), wire('zoom')) }
-                selectedLayer={ selectedLayer }
-                showDocument
-                _ref={ wire('ref') } />
+                            offset.map((it) => (a) => a + it)
+                            .concat(r.repeat((a) => a / zoomLevel, 2))
+                        )
+                        .map(([it, fn]) => fn(it))
+                        .join(' ')
+                    }
+                    onLayerInteract={ wire('layer.interact') }
+                    onClick={ r.pipe(r.always(DOCUMENT), wire('layer.select')) }
+                    onMouseDown={ documentMode && wire('grab.start') }
+                    onMouseWheel={ r.pipe(r.prop('deltaY'), wire('zoom')) }
+                    selectedLayer={ selectedLayer }
+                    showDocument />
+            </div>
 
             <div className='element-view__toolbar'>
                 <VGroup modifiers='grow'>

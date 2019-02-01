@@ -16,4 +16,6 @@ module.exports = {
             { label && <span className='input__label'>{ label }</span> }
             <input type='number' className={ modifiersToClass('input', 'number', modifiers) } { ...rest } />
         </VGroup>,
+    Slider: ({ modifiers='', ...rest }) =>
+        <input type='range' className={ modifiersToClass('input-range',  modifiers) } />
 }
