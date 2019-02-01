@@ -388,6 +388,7 @@ module.exports = switchboard.component(
                         hideBreadcrumbs
                         toolbarEnabled
                         onChange={ wire('file.change') }
+                        modifiers='column'
                         defaultValue={ element.id }>
                         { deck.map((it) =>
                             <FileExplorer.File

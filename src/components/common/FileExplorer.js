@@ -5,8 +5,8 @@ require('./file-explorer.styl')
 
 let File = ({ name, label, children, ...rest }) =>
         <div className='file-explorer__file' { ...rest }>
-            <VGroup modifiers='align-center grow'>
-                <div className='file-explorer__file-face' data-group-modifiers='grow'>
+            <VGroup modifiers='align-center grow justify-space-between'>
+                <div className='file-explorer__file-face'>
                     <VGroup modifiers='justify-center grow'>
                         { children }
                     </VGroup>
