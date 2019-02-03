@@ -21,13 +21,16 @@
 .file-explorer__breadcrumbs
     display flex
     flex-direction row
-    align-items center
+    align-items stretch
     background-color $mid-blue
     border 1px solid $mid-blue
     overflow auto
 
 .file-explorer__breadcrumb
     padding-asym--m()
+
+    display flex
+    align-items center
 
     border 0
     background-color $light-blue
@@ -41,6 +44,8 @@
         color $white
 
 .file-explorer__arrow
+    display flex
+    align-items center
     margin 0 $base-s
     color darken($mid-blue, 55%)
 

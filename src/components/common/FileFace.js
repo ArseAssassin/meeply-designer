@@ -13,12 +13,13 @@ let onDelete = (id) => r.pipe(
             { name }
         ])
 
-module.exports = ({ element, onDoubleClick=Boolean }) =>
+module.exports = ({ element, onDoubleClick=Boolean, setProps }) =>
     <FileExplorer.File
         name={ element.name }
         value={ element.id }
         onDelete={ onDelete(element.id) }
         onRename={ onRename(element.id) }
+        setProps={ setProps }
         deleteText={
             !element.template
                 ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'

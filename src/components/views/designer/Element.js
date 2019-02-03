@@ -405,7 +405,7 @@ module.exports = switchboard.component(
                         modifiers='column'
                         defaultValue={ element.id }>
                         { deck.map((it) =>
-                            <FileFace key={ it.id } element={ it } />
+                            <FileFace value={ it.id } key={ it.id } element={ it } />
                         ) }
 
                         <FileExplorer.File

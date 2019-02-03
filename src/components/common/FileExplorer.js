@@ -9,7 +9,12 @@ require('./file-explorer.styl')
 
 const FOLDED_ITEMS = 100
 
-let File = ({ name, label, children, isEditing, onBlur, onRename, ...rest }) =>
+let File = ({ name, label, children, isEditing, onBlur, onRename, onDelete, deleteText, setProps, ...rest }) =>
+    setProps([rest.value, {
+        onDelete,
+        onRename,
+        deleteText
+    }]) &&
         <div className='file-explorer__file' { ...rest }>
             <VGroup modifiers='align-center grow justify-space-between'>
                 <div className='file-explorer__file-face'>
@@ -101,6 +106,25 @@ module.exports = switchboard.component(
                     path.skipDuplicates(r.equals), r.always(''),
 
                     slot('search.set')
+                ),
+
+            itemProps =
+                signal(
+                    {},
+
+                    slot('props.update')
+                    .scan((memo, [id, props]) => ({
+                        ...memo, [id]: props
+                    }), {})
+                )
+                .skipDuplicates(
+                    r.eqBy(
+                        r.mapObjIndexed(
+                            r.mapObjIndexed((it) =>
+                                typeof it === 'function' ? 'function' : it
+                            )
+                        )
+                    )
                 )
 
         kefir.combine(
@@ -114,11 +138,10 @@ module.exports = switchboard.component(
             search,
             confirmedSearch:
                 search
-                .thru((it) =>
-                    kefir.merge([
-                        it.filter((it) => it === ''),
-                        it.filter((it) => it !== '').debounce(700)
-                    ])
+                .flatMapLatest((it) =>
+                    it === ''
+                        ? kefir.constant('')
+                        : kefir.later(700, it)
                 )
                 .toProperty(),
             selected,
@@ -142,10 +165,16 @@ module.exports = switchboard.component(
                     path.skipDuplicates(r.equals)
                 ]), r.always(1)
             ).map((it) => it * FOLDED_ITEMS),
+            getProps: itemProps.skipDuplicates(r.equals).map((it) =>
+                (id) => it[id] || {}
+            ),
+            setProps: kefir.constant(
+                switchboard.slot.toFn(slot('props.update'))
+            ),
             path
         })
     },
-    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent, setProps, getProps }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
         let isSearching = confirmedSearch.trim().length > 0,
             contents =
                 !isSearching
@@ -153,11 +182,11 @@ module.exports = switchboard.component(
                     : threadLast(children)(
                         parseComponentsFromTree,
                         r.filter((it) =>
-                            it.props.name &&
-                            it.props.name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
+                            getProps(it.props.value).name &&
+                            getProps(it.props.value).name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
                         ),
                         r.uniqBy(r.path(words('props value'))),
-                        r.sortBy((it) => levenshtein.get(confirmedSearch, it.props.value))
+                        r.sortBy((it) => levenshtein.get(confirmedSearch, getProps(it.props.value).name))
                     )
 
         return <div className={ modifiersToClass('file-explorer', modifiers) }>
@@ -219,12 +248,12 @@ module.exports = switchboard.component(
                         <HGroup modifiers='margin-xs'>
                             <Button
                                 onClick={ wire('delete.toggle') }
-                                disabled={ !selectedComponent || !selectedComponent.props.onDelete }>
+                                disabled={ !selectedComponent || !getProps(selectedComponent.props.value).onDelete }>
                                 <Icon name='trash' />
                             </Button>
                             <Button
                                 onClick={ wire('isEditing.toggle') }
-                                disabled={ !selectedComponent || !selectedComponent.props.onRename }>
+                                disabled={ !selectedComponent || !getProps(selectedComponent.props.value).onRename }>
                                 <Icon name='rename' />
                             </Button>
                         </HGroup>
@@ -237,7 +266,7 @@ module.exports = switchboard.component(
                         <VGroup>
                             <div className='file-explorer__delete-confirm'>
                                 <Type modifiers='align-center'>
-                                    { selectedComponent && selectedComponent.props.deleteText }
+                                    { selectedComponent && getProps(selectedComponent.props.value).deleteText }
                                 </Type>
                             </div>
 
@@ -260,7 +289,7 @@ module.exports = switchboard.component(
                                         ),
                                         isEditing: selected === it.props.value && isEditing,
                                         onBlur: wire('isEditing.toggle'),
-                                        onRename: selectedComponent && selectedComponent.props.onRename
+                                        setProps
                                     }) }
                                 </div>
                             )}
@@ -271,7 +300,7 @@ module.exports = switchboard.component(
                                     <File
                                         value='more'
                                         onDoubleClick={ wire('moreItems.enable') }
-                                        name={ ` Show ${ shownItems + FOLDED_ITEMS } of ${ contents.length }...` }>
+                                        name={ ` Show ${ Math.min(shownItems + FOLDED_ITEMS, contents.length) } of ${ contents.length }...` }>
                                         <Icon name='more' />
                                     </File>
                                 </div>
@@ -288,7 +317,7 @@ module.exports = switchboard.component(
 
 module.exports.File = File
 
-module.exports.Folder = ({ name, label, face=<Icon name='folder' />, children, navigateToThis, ...rest }) =>
+module.exports.Folder = ({ name, label, face=<Icon name='folder' />, children, navigateToThis, setProps, ...rest }) =>
     <File name={ name } label={ label } onDoubleClick={ () => navigateToThis() } { ...rest }>
         { face }
     </File>
