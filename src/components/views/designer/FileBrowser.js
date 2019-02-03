@@ -102,16 +102,18 @@ module.exports = switchboard.component(
                                 modifiers='icon-xs'
                                 searchEnabled
                                 preview={
-                                    chosenImage.id &&
-                                        <div className='file-browser__preview' data-group-modifiers='align-center'>
-                                            <VGroup>
+                                    <div className='file-browser__preview' data-group-modifiers='align-center'>
+                                        { chosenImage.id
+                                            ? <VGroup>
                                                 <img alt='preview' src={ chosenImage.body } />
                                                 <Type modifiers='align-center'>{ chosenImage.name }</Type>
                                                 <Type modifiers='align-center'>{ chosenImage.license }</Type>
 
                                                 <button onClick={ () => save(chosenImage.id) }>Save</button>
                                             </VGroup>
-                                        </div>
+                                            : null
+                                        }
+                                    </div>
                                 }>
                                 <FileExplorer.Folder name='Game Icons' value='game-icons'>
                                     { threadLast(libraryImages)(

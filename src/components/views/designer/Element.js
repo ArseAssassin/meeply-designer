@@ -242,7 +242,7 @@ module.exports = switchboard.component(
             .map((event) => ({
                 type: 'image',
                 name: 'Image',
-                width: 150,
+                width: 180,
                 height: 100,
                 body: undefined,
                 x: 0,
@@ -256,11 +256,12 @@ module.exports = switchboard.component(
             slot('layers.text.add')
             .map(() => ({
                 body: 'Text',
-                width: 150,
+                width: 180,
                 height: 100,
                 type: 'text',
                 name: 'Text',
                 textAlign: 'center',
+                fontSize: 12,
                 x: 0,
                 y: 0,
                 id: uuid()
