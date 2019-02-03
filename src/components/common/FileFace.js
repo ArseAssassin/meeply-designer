@@ -3,28 +3,33 @@ let ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     gameModel = require('model/gameModel.js')
 
 
-let onDelete = (id) => r.pipe(
-        r.always(id),
+let onDelete = (it) => r.pipe(
+        r.always(it.id),
         switchboard.slot.toFn(gameModel.elements.deleteElement)
     ),
-    onRename = (id) => (name) =>
+    onRename = (it) => (name) =>
         switchboard.slot.toFn(gameModel.elements.updateElement)([
-            id,
+            it.id,
             { name }
-        ])
+        ]),
+    deleteText = (it) =>
+        !it.template
+            ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
+            : 'Are you sure you want to delete this component? This action can not be undone.',
+    value = r.prop('id'),
+    params = (it) => ({
+        onDelete: onDelete(it),
+        onRename: onRename(it),
+        deleteText: deleteText(it),
+        value: value(it),
+        element: it,
+        name: it.name
+    })
 
-module.exports = ({ element, onDoubleClick=Boolean, setProps }) =>
+module.exports = ({ element, onDoubleClick=Boolean, ...rest }) =>
     <FileExplorer.File
+        { ...rest }
         name={ element.name }
-        value={ element.id }
-        onDelete={ onDelete(element.id) }
-        onRename={ onRename(element.id) }
-        setProps={ setProps }
-        deleteText={
-            !element.template
-                ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
-                : 'Are you sure you want to delete this component? This action can not be undone.'
-        }
         onDoubleClick={ r.pipe(r.always(element.id), onDoubleClick) }>
         <div className='design-view__file'>
             <ElementRenderer element={ element } viewBox={ `0 0 ${ element.width } ${ element.height }`} showDocument />
@@ -52,3 +57,5 @@ module.exports = ({ element, onDoubleClick=Boolean, setProps }) =>
             </div> }
         </div>
     </FileExplorer.File>
+
+module.exports.params = params

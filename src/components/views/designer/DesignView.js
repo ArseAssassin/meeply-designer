@@ -252,7 +252,6 @@ module.exports = switchboard.component(
 
                             { decks.map(({ name, id, ...deck }) =>
                                 <FileExplorer.Folder
-                                    value={ id }
                                     face={
                                         <ElementRenderer
                                             element={ deck }
@@ -266,13 +265,14 @@ module.exports = switchboard.component(
                                             { counts[id] }
                                         </HGroup>
                                     </HGroup> }
-                                    onDelete={ onDelete(id) }
-                                    onRename={ onRename(id) }
-                                    deleteText='Deleting this component will delete the whole deck. Are you sure you want to continue?'
-                                    name={ name }
+                                    { ...FileFace.params({ name, id, ...deck }) }
                                     key={ id }>
                                     { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
-                                        <FileFace value={ it.id } key={ it.id } element={ it } onDoubleClick={ wire('elements.open') }/>
+                                        <FileFace
+                                            key={ it.id }
+                                            { ...(FileFace.params(it)) }
+                                            element={ it }
+                                            onDoubleClick={ wire('elements.open') }/>
                                     ) }
                                 </FileExplorer.Folder>
                             ) }

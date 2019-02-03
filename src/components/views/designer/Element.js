@@ -405,11 +405,11 @@ module.exports = switchboard.component(
                         modifiers='column'
                         defaultValue={ element.id }>
                         { deck.map((it) =>
-                            <FileFace value={ it.id } key={ it.id } element={ it } />
+                            <FileFace key={ it.id } { ...(FileFace.params(it)) } />
                         ) }
 
                         <FileExplorer.File
-                            name='Create element'
+                            name='Create component'
                             onDoubleClick={ wire('deck.add') }
                             value='create'>
                             <Icon name='create' />

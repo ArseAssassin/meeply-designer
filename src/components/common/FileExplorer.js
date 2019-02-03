@@ -10,41 +10,36 @@ require('./file-explorer.styl')
 const FOLDED_ITEMS = 100
 
 let File = ({ name, label, children, isEditing, onBlur, onRename, onDelete, deleteText, setProps, ...rest }) =>
-    setProps([rest.value, {
-        onDelete,
-        onRename,
-        deleteText
-    }]) &&
-        <div className='file-explorer__file' { ...rest }>
-            <VGroup modifiers='align-center grow justify-space-between'>
-                <div className='file-explorer__file-face'>
-                    <VGroup modifiers='justify-center grow'>
-                        { children }
-                    </VGroup>
-                </div>
-                <div className='file-explorer__file-name'>
-                    { !isEditing
-                        ? label || name
-                        : <Input.Text
-                            modifiers='align-center'
-                            onBlur={ onBlur }
-                            onChange={ r.pipe(r.path(words('target value')), onRename) }
-                            onKeyDown={ (it) => {
-                                if (it.keyCode === 13) {
-                                    onBlur()
-                                }
-                            } }
-                            value={ name }
-                            _ref={ (it) => {
-                                if (it && document.activeElement !== it) {
-                                    it.focus()
-                                    it.setSelectionRange(0, it.value.length)
-                                }
-                            } }
-                            /> }
-                </div>
-            </VGroup>
-        </div>,
+    <div className='file-explorer__file' { ...rest }>
+        <VGroup modifiers='align-center grow justify-space-between'>
+            <div className='file-explorer__file-face'>
+                <VGroup modifiers='justify-center grow'>
+                    { children }
+                </VGroup>
+            </div>
+            <div className='file-explorer__file-name'>
+                { !isEditing
+                    ? label || name
+                    : <Input.Text
+                        modifiers='align-center'
+                        onBlur={ onBlur }
+                        onChange={ r.pipe(r.path(words('target value')), onRename) }
+                        onKeyDown={ (it) => {
+                            if (it.keyCode === 13) {
+                                onBlur()
+                            }
+                        } }
+                        value={ name }
+                        _ref={ (it) => {
+                            if (it && document.activeElement !== it) {
+                                it.focus()
+                                it.setSelectionRange(0, it.value.length)
+                            }
+                        } }
+                        /> }
+            </div>
+        </VGroup>
+    </div>,
     valueEq = r.curry((eq, value) => value.props.value === eq),
     resolvePath = (path, it) =>
         path.length === 0
@@ -106,25 +101,6 @@ module.exports = switchboard.component(
                     path.skipDuplicates(r.equals), r.always(''),
 
                     slot('search.set')
-                ),
-
-            itemProps =
-                signal(
-                    {},
-
-                    slot('props.update')
-                    .scan((memo, [id, props]) => ({
-                        ...memo, [id]: props
-                    }), {})
-                )
-                .skipDuplicates(
-                    r.eqBy(
-                        r.mapObjIndexed(
-                            r.mapObjIndexed((it) =>
-                                typeof it === 'function' ? 'function' : it
-                            )
-                        )
-                    )
                 )
 
         kefir.combine(
@@ -165,16 +141,10 @@ module.exports = switchboard.component(
                     path.skipDuplicates(r.equals)
                 ]), r.always(1)
             ).map((it) => it * FOLDED_ITEMS),
-            getProps: itemProps.skipDuplicates(r.equals).map((it) =>
-                (id) => it[id] || {}
-            ),
-            setProps: kefir.constant(
-                switchboard.slot.toFn(slot('props.update'))
-            ),
             path
         })
     },
-    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent, setProps, getProps }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
         let isSearching = confirmedSearch.trim().length > 0,
             contents =
                 !isSearching
@@ -182,11 +152,11 @@ module.exports = switchboard.component(
                     : threadLast(children)(
                         parseComponentsFromTree,
                         r.filter((it) =>
-                            getProps(it.props.value).name &&
-                            getProps(it.props.value).name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
+                            it.props.name &&
+                            it.props.name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
                         ),
                         r.uniqBy(r.path(words('props value'))),
-                        r.sortBy((it) => levenshtein.get(confirmedSearch, getProps(it.props.value).name))
+                        r.sortBy((it) => levenshtein.get(confirmedSearch, it.props.name))
                     )
 
         return <div className={ modifiersToClass('file-explorer', modifiers) }>
@@ -248,12 +218,12 @@ module.exports = switchboard.component(
                         <HGroup modifiers='margin-xs'>
                             <Button
                                 onClick={ wire('delete.toggle') }
-                                disabled={ !selectedComponent || !getProps(selectedComponent.props.value).onDelete }>
+                                disabled={ !selectedComponent || !selectedComponent.props.onDelete }>
                                 <Icon name='trash' />
                             </Button>
                             <Button
                                 onClick={ wire('isEditing.toggle') }
-                                disabled={ !selectedComponent || !getProps(selectedComponent.props.value).onRename }>
+                                disabled={ !selectedComponent || !selectedComponent.props.onRename }>
                                 <Icon name='rename' />
                             </Button>
                         </HGroup>
@@ -266,7 +236,7 @@ module.exports = switchboard.component(
                         <VGroup>
                             <div className='file-explorer__delete-confirm'>
                                 <Type modifiers='align-center'>
-                                    { selectedComponent && getProps(selectedComponent.props.value).deleteText }
+                                    { selectedComponent && selectedComponent.props.deleteText }
                                 </Type>
                             </div>
 
@@ -288,8 +258,7 @@ module.exports = switchboard.component(
                                             wire('navigate')
                                         ),
                                         isEditing: selected === it.props.value && isEditing,
-                                        onBlur: wire('isEditing.toggle'),
-                                        setProps
+                                        onBlur: wire('isEditing.toggle')
                                     }) }
                                 </div>
                             )}
