@@ -177,17 +177,14 @@ module.exports = switchboard.component(
                         slot('tabs.select'),
 
                         kefir.combine(
-                            [slot('elements.new')],
-                            [tabs.map(r.prop('length'))]
-                        )
-                        .map(r.last),
-
-                        kefir.combine(
-                            [slot('elements.open')],
+                            [tabs.map(r.map(r.prop('id')))
+                             .skipDuplicates(r.equals)
+                             .slidingWindow(2, 2)
+                             .map(([prev, next]) => r.difference(next, prev)[0])
+                             .filter(Boolean)],
                             [tabs]
                         )
-                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs.map(r.prop('props'))) + 1)
-
+                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs) + 1)
                     ),
                     tabs.map(r.prop('length')).skipDuplicates()
                 ])
