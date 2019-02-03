@@ -4,6 +4,7 @@ let uuid = require('uuid/v4'),
     FileExplorer = require('components/common/FileExplorer.js'),
 
     resourcesModel = require('model/resourcesModel.js'),
+    gameModel = require('model/gameModel.js'),
     fileUtils = require('utils/fileUtils.js')
 
 require('./file-browser.styl')
@@ -53,11 +54,31 @@ module.exports = switchboard.component(
                 .thru(resourcesModel.images.getById)
                 .map(r.propOr('', 'name')),
             userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
+            usedImages:
+                gameModel.elements.signal
+                .flatMapLatest((elements) => threadLast(elements)(
+                    r.map((it) => it.body.filter((it) => it.type === 'image')),
+                    r.unnest,
+                    r.map(r.prop('id')),
+                    r.uniq,
+                    r.map((id) => threadLast(elements)(
+                        r.map((it) => it.body.filter((it) => it.id === id)),
+                        r.unnest,
+                        r.map(r.prop('body'))
+                    )),
+                    r.unnest,
+                    r.uniq,
+                    r.filter(Boolean),
+                    (it) => kefir.combine(
+                        it.map((it) => resourcesModel.images.getById(kefir.constant(it)))
+                    )
+                ))
+                .toProperty(),
             libraryImages: resourcesModel.libraryImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
             chosenImage
         })
     },
-    ({ wiredState: { save, chosenImage, imageName, userImages, libraryImages, isOpen }, wire, value, onChange }) => {
+    ({ wiredState: { save, chosenImage, imageName, usedImages, userImages, libraryImages, isOpen }, wire, value, onChange }) => {
         return <VGroup modifiers='margin-s'>
             <div onClick={ wire('toggle') }>
                 <VGroup modifiers='margin-s'>
@@ -79,6 +100,7 @@ module.exports = switchboard.component(
                                 onChange={ wire('image.choose') }
                                 rootName='/'
                                 modifiers='icon-xs'
+                                searchEnabled
                                 preview={
                                     chosenImage.id &&
                                         <div className='file-browser__preview' data-group-modifiers='align-center'>
@@ -134,6 +156,16 @@ module.exports = switchboard.component(
                                     onDoubleClick={ wire('upload') }>
                                     <Icon name='upload' />
                                 </FileExplorer.File>
+
+                                { (usedImages || []).map((it) =>
+                                    <FileExplorer.File
+                                        value={ it.id }
+                                        key={ it.id }
+                                        name={ it.name }
+                                        onDoubleClick={ () => save(it.id) }>
+                                        <img src={ it.body } alt='thumbnail' />
+                                    </FileExplorer.File>
+                                ) }
 
                                 { userImages.map((it) =>
                                     <FileExplorer.File

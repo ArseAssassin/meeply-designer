@@ -9,7 +9,7 @@ module.exports = switchboard.component(
                     (elements) =>
                         elements.filter((it) => !it.template)
                         .map(({ name, id }) => [id, name, threadLast(elements)(
-                            r.filter((it) => it.template === id),
+                            r.filter((it) => it.template === id || it.id === id),
                             r.map((it) => it.count),
                             r.reduce((a, b) => a + b, 0)
                         )])

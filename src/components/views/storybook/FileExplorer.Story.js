@@ -3,7 +3,7 @@ let Story = require('./Story.js'),
 
 module.exports = <Story name='FileExplorer'>
     <Story.Chapter name='FileExplorer'>
-        <FileExplorer rootName='File explorer #1'>
+        <FileExplorer rootName='File explorer #1' searchEnabled>
             <FileExplorer.Folder name='Folder 1' value='dir-1'>
                <FileExplorer.Folder name='Subfolder 1' value='dir-2'>
                     { r.range(0, 2).map((it) =>

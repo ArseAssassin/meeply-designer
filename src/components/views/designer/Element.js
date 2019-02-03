@@ -5,6 +5,7 @@ let uuid = require('uuid/v4'),
     FormField = require('components/forms/FormField.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
+    FileFace = require('components/common/FileFace.js'),
     Button = require('components/common/Button.js'),
     FileBrowser = require('components/views/designer/FileBrowser.js'),
     gameModel = require('model/gameModel.js'),
@@ -404,19 +405,7 @@ module.exports = switchboard.component(
                         modifiers='column'
                         defaultValue={ element.id }>
                         { deck.map((it) =>
-                            <FileExplorer.File
-                                key={ it.id }
-                                name={ it.name }
-                                onDelete={ r.pipe(r.always(it.id), wire(slot('element.delete'))) }
-                                onRename={ (name) => wire(gameModel.elements.updateElement)([it.id, { name }]) }
-                                deleteText={
-                                    !element.template
-                                        ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
-                                        : 'Are you sure you want to delete this component? This action can not be undone.'
-                                }
-                                value={ it.id }>
-                                <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                            </FileExplorer.File>
+                            <FileFace key={ it.id } element={ it } />
                         ) }
 
                         <FileExplorer.File

@@ -16,6 +16,7 @@ let File = ({ name, label, children, isEditing, onBlur, onRename, ...rest }) =>
                     { !isEditing
                         ? label || name
                         : <Input.Text
+                            modifiers='align-center'
                             onBlur={ onBlur }
                             onChange={ r.pipe(r.path(words('target value')), onRename) }
                             onKeyDown={ (it) => {
@@ -42,7 +43,18 @@ let File = ({ name, label, children, isEditing, onBlur, onRename, ...rest }) =>
             resolvePath(
                 r.tail(path),
                 React.Children.toArray(r.pathOr(it, words('props children'), r.find(valueEq(r.head(path)), it)))
-            )
+            ),
+    parseComponentsFromTree = (it) => threadLast(it)(
+        React.Children.toArray,
+        r.filter(r.prop('props')),
+        r.map((it) => threadLast(it)(
+            r.pathOr([], words('props children')),
+            parseComponentsFromTree,
+            r.concat([it])
+        )),
+        r.unnest
+    )
+
 
 module.exports = switchboard.component(
     ({ signal, slot, propsProperty, isAlive }) => {
@@ -75,6 +87,13 @@ module.exports = switchboard.component(
                         valueEq(value),
                         resolvePath(path, React.Children.toArray(children))
                     )
+                ),
+
+            search =
+                signal(
+                    '',
+
+                    slot('search.set')
                 )
 
         kefir.combine(
@@ -85,6 +104,7 @@ module.exports = switchboard.component(
         .onValue(([_, onDelete]) => onDelete())
 
         return ({
+            search,
             selected,
             selectedComponent,
             isEditing: signal(
@@ -100,40 +120,71 @@ module.exports = switchboard.component(
             path
         })
     },
-    ({ wiredState: { path, isDeleting, isEditing, selected, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete }) => {
-        let contents = resolvePath(path, React.Children.toArray(children))
+    ({ wiredState: { path, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+        let isSearching = search.length > 2,
+            contents =
+                !isSearching
+                    ? resolvePath(path, React.Children.toArray(children))
+                    : threadLast(children)(
+                        parseComponentsFromTree,
+                        r.filter((it) =>
+                            it.props.name &&
+                            it.props.name.toLowerCase().indexOf(search.toLowerCase()) > -1
+                        ),
+                        r.uniqBy(r.path(words('props value')))
+                    )
 
         return <div className={ modifiersToClass('file-explorer', modifiers) }>
             <VGroup modifiers='grow margin-s'>
-                { !hideBreadcrumbs &&  <div className='file-explorer__breadcrumbs'>
-                    { threadLast(path)(
-                        r.reduce((memo, next) => {
-                            let lastComponent = r.last(memo),
-                                pathComponent = r.find(valueEq(next), lastComponent.children)
+                <HGroup modifiers='grow align-center margin-s'>
+                    { !hideBreadcrumbs && <div className='file-explorer__breadcrumbs' data-group-modifiers='grow'>
+                        { threadLast(path)(
+                            !isSearching
+                                ? r.reduce((memo, next) => {
+                                    let lastComponent = r.last(memo),
+                                        pathComponent = r.find(valueEq(next), lastComponent.children)
 
-                            if (!pathComponent) {
-                                return memo
-                            }
+                                    if (!pathComponent) {
+                                        return memo
+                                    }
 
-                            return memo.concat({
-                                name: pathComponent.props.name,
-                                path: lastComponent.path.concat(next),
-                                children: React.Children.toArray(pathComponent.props.children)
-                            })
-                        }, [{ path: [], name: rootName, children: React.Children.toArray(children) }]),
-                        r.intersperse({ name: '»' }),
-                        r.map(({ path, name }) =>
-                            path
-                                ? <button
-                                    key={ name }
-                                    className='file-explorer__breadcrumb'
-                                    onClick={ r.pipe(r.always(path), wire('navigate')) }>
-                                    { name }
-                                </button>
-                                : <span className='file-explorer__arrow'>{ name }</span>
-                        )
-                    ) }
-                </div> }
+                                    return memo.concat({
+                                        name: pathComponent.props.name,
+                                        path: lastComponent.path.concat(next),
+                                        children: React.Children.toArray(pathComponent.props.children)
+                                    })
+                                }, [{ path: [], name: rootName, children: React.Children.toArray(children) }])
+                                : r.always([
+                                    { path: [], name: rootName, resetSearch: true },
+                                    { path: [], name: 'Search...' }
+                                ]),
+                            r.intersperse({ name: '»' }),
+                            r.map(({ path, name, resetSearch }) =>
+                                path
+                                    ? <button
+                                        key={ name }
+                                        className='file-explorer__breadcrumb'
+                                        onClick={
+                                            !resetSearch
+                                                ? r.pipe(r.always(path), wire('navigate'))
+                                                : r.pipe(r.always(''), wire('search.set'))}>
+                                        { name }
+                                    </button>
+                                    : <span className='file-explorer__arrow'>{ name }</span>
+                            )
+                        ) }
+                    </div> }
+
+                    { searchEnabled &&
+                        <HGroup modifiers='margin-xs align-center'>
+                            <Icon name='zoom' modifiers='s' />
+                            <Input.Text
+                                placeholder='Search'
+                                value={ search }
+                                onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
+                        </HGroup>
+                    }
+                </HGroup>
 
                 { toolbarEnabled &&
                     <div className='file-explorer__toolbar'>

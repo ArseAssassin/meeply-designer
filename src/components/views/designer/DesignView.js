@@ -3,6 +3,7 @@ let uuid = require('uuid/v4'),
     TabBar = require('components/common/TabBar.js'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
+    FileFace = require('components/common/FileFace.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
     TestGame = require('components/views/designer/TestGame.js'),
@@ -77,24 +78,28 @@ module.exports = switchboard.component(
                 slot('elements.new'),
                 (it) => it.concat({
                     component: 'newElement',
+                    props: {},
                     id: uuid()
                 }),
 
                 slot('print'),
                 (it) => it.concat({
                     component: 'print',
+                    props: {},
                     id: uuid()
                 }),
 
                 slot('info'),
                 (it) => it.concat({
                     component: 'info',
+                    props: {},
                     id: uuid()
                 }),
 
                 slot('test'),
                 (it) => it.concat({
                     component: 'test',
+                    props: {},
                     id: uuid()
                 }),
 
@@ -267,39 +272,7 @@ module.exports = switchboard.component(
                                     name={ name }
                                     key={ id }>
                                     { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
-                                        <FileExplorer.File
-                                            name={ it.name }
-                                            value={ it.id }
-                                            onDelete={ onDelete(it.id) }
-                                            onRename={ onRename(it.id) }
-                                            deleteText={
-                                                !it.template
-                                                    ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
-                                                    : 'Are you sure you want to delete this component? This action can not be undone.'
-                                            }
-                                            onDoubleClick={ r.pipe(r.always(it.id), wire('elements.open')) }>
-                                            <div className='design-view__file'>
-                                                <ElementRenderer element={ it } viewBox={ `0 0 ${ it.width } ${ it.height }`} showDocument />
-                                                <div className='design-view__count'>
-                                                    <HGroup modifiers='margin-s align-center'>
-                                                        <Icon name='count' modifiers='m' />
-                                                        <input
-                                                            onClick={ cancel }
-                                                            onDoubleClick={ cancel }
-                                                            step='1'
-                                                            min='0'
-                                                            type='number'
-                                                            onChange={ r.pipe(
-                                                                r.path(words('target value')),
-                                                                parseInt,
-                                                                r.pair(it.id),
-                                                                wire(gameModel.elements.setCount)
-                                                            ) }
-                                                            value={ it.count } />
-                                                    </HGroup>
-                                                </div>
-                                            </div>
-                                        </FileExplorer.File>
+                                        <FileFace value={ it.id } key={ it.id } element={ it } onDoubleClick={ wire('elements.open') }/>
                                     ) }
                                 </FileExplorer.Folder>
                             ) }

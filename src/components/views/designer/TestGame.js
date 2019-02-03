@@ -44,7 +44,7 @@ module.exports = switchboard.component(
                     gameModel.elements.populateTemplate(
                         gameModel.elements.signal
                         .map(r.pipe(
-                            r.filter((it) => it.template === deck),
+                            r.filter((it) => it.template === deck || it.id === deck),
 
                             r.map((it) => r.repeat(it, it.count)),
                             r.unnest,

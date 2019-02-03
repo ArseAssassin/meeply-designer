@@ -17,6 +17,7 @@ let icons = {
     'align-right': require('./../../../node_modules/feather-icons/dist/icons/align-right.svg'),
     reset: require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg'),
     count: require('./../../../node_modules/feather-icons/dist/icons/layers.svg'),
+    copy: require('./../../../node_modules/feather-icons/dist/icons/copy.svg'),
     print: require('./../../../node_modules/feather-icons/dist/icons/printer.svg'),
     document: require('./../../../node_modules/feather-icons/dist/icons/file.svg'),
     save: require('./../../../node_modules/feather-icons/dist/icons/save.svg'),
@@ -24,7 +25,8 @@ let icons = {
     info: require('./../../../node_modules/feather-icons/dist/icons/info.svg'),
     upload: require('./../../../node_modules/feather-icons/dist/icons/upload-cloud.svg'),
     rename: require('./../../../node_modules/feather-icons/dist/icons/edit-3.svg'),
-    zoom: require('./../../../node_modules/feather-icons/dist/icons/search.svg')
+    zoom: require('./../../../node_modules/feather-icons/dist/icons/search.svg'),
+    key: require('./key.svg')
 }
 
 module.exports = ({ name, modifiers='' }) =>
