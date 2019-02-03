@@ -105,6 +105,7 @@ module.exports = switchboard.component(
 
         return ({
             search,
+            confirmedSearch: search.debounce(700),
             selected,
             selectedComponent,
             isEditing: signal(
@@ -120,8 +121,8 @@ module.exports = switchboard.component(
             path
         })
     },
-    ({ wiredState: { path, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
-        let isSearching = search.length > 2,
+    ({ wiredState: { path, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+        let isSearching = confirmedSearch.trim().length > 0,
             contents =
                 !isSearching
                     ? resolvePath(path, React.Children.toArray(children))
@@ -129,7 +130,7 @@ module.exports = switchboard.component(
                         parseComponentsFromTree,
                         r.filter((it) =>
                             it.props.name &&
-                            it.props.name.toLowerCase().indexOf(search.toLowerCase()) > -1
+                            it.props.name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
                         ),
                         r.uniqBy(r.path(words('props value')))
                     )
