@@ -26,6 +26,8 @@ let icons = {
     upload: require('./../../../node_modules/feather-icons/dist/icons/upload-cloud.svg'),
     rename: require('./../../../node_modules/feather-icons/dist/icons/edit-3.svg'),
     zoom: require('./../../../node_modules/feather-icons/dist/icons/search.svg'),
+    more: require('./../../../node_modules/feather-icons/dist/icons/more-horizontal.svg'),
+    home: require('./../../../node_modules/feather-icons/dist/icons/home.svg'),
     key: require('./key.svg')
 }
 

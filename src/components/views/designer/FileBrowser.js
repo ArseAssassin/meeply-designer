@@ -19,7 +19,7 @@ module.exports = switchboard.component(
                     propsProperty.map(r.prop('value')),
 
                     slot('image.choose')
-                    .filter((it) => !r.contains(it, words('fractal-symbols upload')) && !r.contains('game-icons', it))
+                    .filter((it) => !r.contains(it, words('more fractal-symbols upload')) && !r.contains('game-icons', it))
                 )
                 .thru(resourcesModel.images.getById)
                 .map((it) => it || {}),
@@ -98,7 +98,7 @@ module.exports = switchboard.component(
                             <FileExplorer
                                 defaultValue={ chosenImage.id }
                                 onChange={ wire('image.choose') }
-                                rootName='/'
+                                rootName={ <Icon name='home' modifiers='s' /> }
                                 modifiers='icon-xs'
                                 searchEnabled
                                 preview={

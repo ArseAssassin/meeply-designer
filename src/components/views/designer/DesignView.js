@@ -246,7 +246,7 @@ module.exports = switchboard.component(
                 <TabBar.Tab label={ gameName } closingDisabled>
                     <div className='game-view'>
                         <FileExplorer
-                            rootName='/'
+                            rootName={ <Icon name='home' modifiers='s' /> }
                             toolbarEnabled
                             canDelete={ (it) => it && !r.contains(it, words('create resources')) }>
 

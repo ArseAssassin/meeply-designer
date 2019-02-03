@@ -1,8 +1,13 @@
-let Button = require('components/common/Button.js'),
+let levenshtein = require('fast-levenshtein'),
+
+    Button = require('components/common/Button.js'),
     Modal = require('components/common/Modal.js'),
     Input = require('components/common/Input.js')
 
+
 require('./file-explorer.styl')
+
+const FOLDED_ITEMS = 100
 
 let File = ({ name, label, children, isEditing, onBlur, onRename, ...rest }) =>
         <div className='file-explorer__file' { ...rest }>
@@ -93,6 +98,8 @@ module.exports = switchboard.component(
                 signal(
                     '',
 
+                    path.skipDuplicates(r.equals), r.always(''),
+
                     slot('search.set')
                 )
 
@@ -105,7 +112,15 @@ module.exports = switchboard.component(
 
         return ({
             search,
-            confirmedSearch: search.debounce(700),
+            confirmedSearch:
+                search
+                .thru((it) =>
+                    kefir.merge([
+                        it.filter((it) => it === ''),
+                        it.filter((it) => it !== '').debounce(700)
+                    ])
+                )
+                .toProperty(),
             selected,
             selectedComponent,
             isEditing: signal(
@@ -118,10 +133,19 @@ module.exports = switchboard.component(
 
                 slot('delete.toggle'), r.not
             ),
+            shownItems: signal(
+                1,
+
+                slot('moreItems.enable'), (it) => it + 1,
+                kefir.merge([
+                    search.skipDuplicates(),
+                    path.skipDuplicates(r.equals)
+                ]), r.always(1)
+            ).map((it) => it * FOLDED_ITEMS),
             path
         })
     },
-    ({ wiredState: { path, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
         let isSearching = confirmedSearch.trim().length > 0,
             contents =
                 !isSearching
@@ -132,7 +156,8 @@ module.exports = switchboard.component(
                             it.props.name &&
                             it.props.name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
                         ),
-                        r.uniqBy(r.path(words('props value')))
+                        r.uniqBy(r.path(words('props value'))),
+                        r.sortBy((it) => levenshtein.get(confirmedSearch, it.props.value))
                     )
 
         return <div className={ modifiersToClass('file-explorer', modifiers) }>
@@ -177,13 +202,15 @@ module.exports = switchboard.component(
                     </div> }
 
                     { searchEnabled &&
-                        <HGroup modifiers='margin-xs align-center'>
-                            <Icon name='zoom' modifiers='s' />
-                            <Input.Text
-                                placeholder='Search'
-                                value={ search }
-                                onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
-                        </HGroup>
+                        <label>
+                            <HGroup modifiers='margin-s align-center'>
+                                <Icon name='zoom' modifiers='m' />
+                                <Input.Text
+                                    placeholder='Search'
+                                    value={ search }
+                                    onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
+                            </HGroup>
+                        </label>
                     }
                 </HGroup>
 
@@ -223,7 +250,7 @@ module.exports = switchboard.component(
 
                     <HGroup modifiers='grow' data-group-modifiers='grow'>
                         <div className='file-explorer__items' data-group-modifiers='grow'>
-                            { contents.map((it, idx) =>
+                            { r.take(shownItems, contents).map((it, idx) =>
                                 <div key={ it.props.value } className={ modifiersToClass('file-explorer__file-wrapper', it.props.value === selected && 'selected') }
                                      onClick={ r.pipe(r.always(it.props.value), r.tap(onChange || Boolean), wire('select')) }>
                                     { React.cloneElement(it, {
@@ -237,6 +264,18 @@ module.exports = switchboard.component(
                                     }) }
                                 </div>
                             )}
+
+                            { contents.length > shownItems &&
+                                <div className={ modifiersToClass('file-explorer__file-wrapper', 'more' === selected && 'selected') }
+                                     onClick={ r.pipe(r.always('more'), r.tap(onChange || Boolean), wire('select')) }>
+                                    <File
+                                        value='more'
+                                        onDoubleClick={ wire('moreItems.enable') }
+                                        name={ ` Show ${ shownItems + FOLDED_ITEMS } of ${ contents.length }...` }>
+                                        <Icon name='more' />
+                                    </File>
+                                </div>
+                            }
                         </div>
 
                         { preview }
