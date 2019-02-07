@@ -28,6 +28,10 @@ let icons = {
     zoom: require('./../../../node_modules/feather-icons/dist/icons/search.svg'),
     more: require('./../../../node_modules/feather-icons/dist/icons/more-horizontal.svg'),
     home: require('./../../../node_modules/feather-icons/dist/icons/home.svg'),
+    visible: require('./../../../node_modules/feather-icons/dist/icons/eye.svg'),
+    hidden: require('./../../../node_modules/feather-icons/dist/icons/eye-off.svg'),
+    lock: require('./../../../node_modules/feather-icons/dist/icons/lock.svg'),
+    unlock: require('./../../../node_modules/feather-icons/dist/icons/unlock.svg'),
     key: require('./key.svg')
 }
 

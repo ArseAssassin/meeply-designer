@@ -77,6 +77,9 @@
     padding--m()
 
     border-top 1px solid $grey
+    height 100%
+    display flex
+    box-sizing border-box
 
 .element-view__tools
     border-right 1px solid $grey
@@ -107,22 +110,32 @@
     &:hover
         border-color $white
 
-.element-view__layer
+.element-view__layer button:not(.button)
     margin-negative-h--m()
     padding-h--m()
     padding-v--s()
 
     display block
-    border 0
-    background-color transparent
     width 100%
+    border 0
     text-align left
+
+.element-view__layer button
+    background-color transparent
+
+.element-view__layer--locked button
+    color darken($grey, 40%)
 
 .element-view__layer--selected
     background-color $grey
 
 .element-view__size-indicator
     fill transparent
+
+.element-view__svg-layer
+    image
+    text
+        pointer-events none
 
 .element-view__svg-layer--selected .element-view__size-indicator
     pointer-events auto
@@ -153,10 +166,10 @@
     stroke $light-blue
     fill transparent
 
-.element-view__svg-layer--selected.element-view__svg-layer--locked .element-view__resize-indicator
+.element-view__svg-layer--selected.element-view__svg-layer--copy .element-view__resize-indicator
     visibility hidden
 
-.element-view__svg-layer--selected.element-view__svg-layer--locked .element-view__size-indicator
+.element-view__svg-layer--selected.element-view__svg-layer--copy .element-view__size-indicator
     stroke darken($grey, 25%)
 
 .element-view__svg-layer
@@ -170,5 +183,4 @@
     outline none
 
 .element-view__layer-form
-    height 400px
     overflow-y auto

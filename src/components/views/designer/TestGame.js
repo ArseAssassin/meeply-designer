@@ -45,10 +45,11 @@ module.exports = switchboard.component(
                         gameModel.elements.signal
                         .map(r.pipe(
                             r.filter((it) => it.template === deck || it.id === deck),
-
                             r.map((it) => r.repeat(it, it.count)),
                             r.unnest,
-                            r.sortBy(() => Math.random()),
+                            r.map((it) => [Math.random(), it]),
+                            r.sortBy(r.head),
+                            r.map(r.last)
                         ))
                     )
                     .map(r.pipe(

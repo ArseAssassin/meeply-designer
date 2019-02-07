@@ -28,12 +28,16 @@ let findName = (name, names, index=2) => {
 
     FormRenderer = switchboard.component(
         ({ propsProperty, ...rest }) => {
-            let { capture } = componentForm({
-                name: {
-                    defaultValue: '',
-                    validator: required()
-                }
-            }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize color')))))(rest)
+            let { slot } = rest,
+                { capture } = componentForm({
+                    name: {
+                        defaultValue: '',
+                        validator: required()
+                    }
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize color')))).map((it) => ({ ...it, body: it.body || undefined }))
+                )(rest),
+                ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
+                imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
 
             kefir.combine(
                 [rest.slot('componentForm.update')],
@@ -41,18 +45,41 @@ let findName = (name, names, index=2) => {
             )
             .onValue(([update, { onUpdate }]) => onUpdate(update))
 
+            propsProperty.map(r.prop('onFocusForm'))
+            .filter(Boolean)
+            .take(1)
+            .onValue((fn) => fn(switchboard.slot.toFn(slot('focus'))))
+
+            slot('focus')
+            .flatMap(() =>
+                propsProperty.map(r.path(words('layer type')))
+                .debounce(100)
+                .flatMap((type) =>
+                    type === 'text'
+                    ? ref.debounce(100).take(1).map((it) => () =>
+                        setTimeout(() => it.focus(), 100)
+                    )
+                    : imageFocus.debounce(100).filter(Boolean).take(1)
+                )
+                .take(1)
+            )
+            .onValue((fn) => fn())
+
             return { capture }
         },
         ({ wiredState: { capture }, wire, layer, isSlave }) =>
             <div className='element-view__layer-form'>
                 <VGroup>
                     {layer.type === 'text' && capture(<FormField name='body'>
-                        <Input.Textarea />
+                        <Input.Textarea _ref={ wire('ref') } />
                     </FormField>)}
 
                     { layer.type === 'image' &&
                         capture(<FormField.Basic name='body'>
-                            <FileBrowser type='image' />
+                            <FileBrowser
+                                onImageFocus={ wire('imageFocus.set') }
+                                id={ layer.id }
+                                type='image' />
                         </FormField.Basic>)
                     }
 
@@ -143,7 +170,7 @@ module.exports = switchboard.component(
             layers =
                 kefir.combine([element], [element])
                 .map(([it, element]) =>
-                    it.body.concat([{ type: DOCUMENT, name: element.name, id: DOCUMENT }])
+                    [{ type: DOCUMENT, name: element.name, id: DOCUMENT }].concat(it.body)
                 )
                 .toProperty(),
             selectedLayer =
@@ -165,19 +192,20 @@ module.exports = switchboard.component(
                     .slidingWindow(2, 2)
                     .map(r.pipe(r.reverse, r.apply(r.difference), r.head))
                     .filter(Boolean)
-                ),
+                )
+                .skipDuplicates(),
             deck =
                 element
                 .flatMapLatest(({ id, template }) =>
                     gameModel.elements.signal
-                    .map(r.pipe(
+                    .map((elements) => threadLast(elements)(
                         r.filter((it) =>
                             template
                                 ? it.template === template || it.id === template
                                 : it.template === id || it.id === id
                         ),
                         r.map((it) => ({ ...it, template: it.template || '' })),
-                        r.sortWith([r.ascend(r.prop('template'))])
+                        r.sortWith([r.ascend(r.prop('template')), r.ascend((it) => r.findIndex(r.propEq('id', it.id), elements))])
                     ))
                 )
                 .flatMapLatest((deck) =>
@@ -201,8 +229,17 @@ module.exports = switchboard.component(
                     1,
 
                     kefir.merge([
-                        slot('zoom')
-                        .throttle(1000 / 5),
+                        kefir.combine([
+                            slot('zoom')
+                            .throttle(1000 / 5)
+                        ], [signal(
+                            false,
+
+                            kefir.fromEvents(document.body, 'keydown').filter((it) => it.keyCode === 18), r.T,
+                            kefir.fromEvents(document.body, 'keyup').filter((it) => it.keyCode === 18), r.F
+                        )])
+                        .filter(r.last)
+                        .map(r.head),
 
                         slot('zoom.click')
                     ])
@@ -226,11 +263,29 @@ module.exports = switchboard.component(
                         .takeUntilBy(kefir.fromEvents(document.body, 'mouseup'))
                     )
                 )
+            ),
+
+            focusForm = signal(
+                Boolean,
+
+                slot('focusForm.set')
             )
 
+        kefir.combine(
+            [slot('layer.interact').filter(r.propEq('type', 'doubleclick'))],
+            [focusForm]
+        )
+        .map(r.last)
+        .onValue((it) => it())
+
         kefir.combine([
-            slot('layer.interact')
-            .filter(r.pipe(r.prop('type'), r.contains(r.__, words('resize move'))))
+            kefir.merge([
+                slot('layer.interact')
+                .filter(r.pipe(r.prop('type'), r.contains(r.__, words('resize move')))),
+
+                slot('layers.hidden.set')
+                .map(([id, status]) => ({ layer: { id }, body: { hidden: status }}))
+            ])
         ], [elementId, zoomLevel])
         .map(([{ layer: { id }, body }, elementId]) => [id, elementId, {
             ...body
@@ -242,6 +297,7 @@ module.exports = switchboard.component(
             .map((event) => ({
                 type: 'image',
                 name: 'Image',
+                hidden: false,
                 width: 180,
                 height: 100,
                 body: undefined,
@@ -255,11 +311,12 @@ module.exports = switchboard.component(
         kefir.combine([
             slot('layers.text.add')
             .map(() => ({
-                body: 'Text',
+                body: 'Type your text here',
                 width: 180,
                 height: 100,
                 type: 'text',
                 name: 'Text',
+                hidden: false,
                 textAlign: 'center',
                 fontSize: 12,
                 x: 0,
@@ -321,6 +378,13 @@ module.exports = switchboard.component(
         .to(gameModel.elements.updateLayer)
 
         kefir.combine(
+            [slot('lock.set')],
+            [elementId]
+        )
+        .map(([[layerId, body], elementId]) => [layerId, elementId, body])
+        .to(gameModel.elements.updateLayer)
+
+        kefir.combine(
             [slot('element.delete')],
             [deck, propsProperty]
         )
@@ -370,7 +434,7 @@ module.exports = switchboard.component(
                         ])
                         .map(([[width, height], element, zoomLevel]) => {
                             let x = element.width / 2 - (width / zoomLevel) / 2,
-                                y = element.height / 2 - (height / zoomLevel) / 2.5
+                                y = element.height / 2 - (height / zoomLevel) / 2
 
                             return [x, y, width, height]
                         })
@@ -381,6 +445,7 @@ module.exports = switchboard.component(
             selectedLayer,
             deckShown,
             deck,
+            focusForm,
             documentMode: selectedLayer.map(r.equals(DOCUMENT)),
             grabbing: signal(
                 false,
@@ -392,7 +457,7 @@ module.exports = switchboard.component(
             )
         })
     }),
-    ({ wiredState: { deckShown, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire, slot }) =>
+    ({ wiredState: { deckShown, focusForm, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
         <div className='element-view'>
             <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>
                 <button className='element-view__tab' onClick={ wire('deck.toggle') }>Deck</button>
@@ -455,16 +520,17 @@ module.exports = switchboard.component(
 
             <div className='element-view__toolbar'>
                 <VGroup modifiers='grow'>
-                    <div className='element-view__toolbar-panel'>
+                    <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
                         { ((layer) =>
                             <FormRenderer
                                 isSlave={ element.template }
                                 onUpdate={ wire('form.update') }
+                                onFocusForm={ wire('focusForm.set') }
                                 layer={ layer.type === 'document' ? element : layer } />
                         )(r.find(r.propEq('id', selectedLayer), layers)) }
                     </div>
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
-                        <VGroup data-group-modifiers='grow'>
+                        <VGroup data-group-modifiers='grow' modifiers='grow'>
                             <HGroup modifiers='justify-space-between align-center'>
                                 <HGroup modifiers='margin-xs'>
                                     <button
@@ -500,25 +566,48 @@ module.exports = switchboard.component(
                                 </button>
                             </HGroup>
 
-                            <VGroup modifiers='grow margin-none'>
-                                { layers.map((it) =>
-                                    <button
-                                        onClick={ r.pipe(r.always(it.id), wire('layer.select')) }
-                                        className={
-                                            modifiersToClass(
-                                                'element-view__layer',
-                                                selectedLayer === it.id && 'selected',
-                                                it.isLocked && 'locked'
-                                            ) }>
-                                        <HGroup modifiers='margin-s align-center justify-space-between'>
-                                            <HGroup modifiers='margin-s align-center'>
-                                                <Icon name={ LAYER_ICONS[it.type] } />
-                                                { it.name }
-                                            </HGroup>
+                            <VGroup modifiers='grow margin-none' data-group-modifiers='grow'>
+                                { r.reverse(layers).map((it) =>
+                                    <div className={
+                                        modifiersToClass(
+                                            'element-view__layer',
+                                            selectedLayer === it.id && 'selected',
+                                            element.template && it.isLocked && 'locked'
+                                        ) }>
+                                        <HGroup modifiers='margin-xs grow align-center'>
+                                            <Button
+                                                style={{ visibility: it.type === DOCUMENT && 'hidden' }}
+                                                modifiers='xs'
+                                                onClick={ r.pipe(r.always([it.id, !it.hidden]), wire('layers.hidden.set')) }>
+                                                <Icon name={ it.hidden ? 'hidden' : 'visible'} modifiers='xs' />
+                                            </Button>
 
-                                            <Icon name={ it.isLocked && it.isLinked && 'link' } modifiers='s' />
+                                            <button
+                                                onClick={ r.pipe(r.always(it.id), wire('layer.select')) }
+                                                onDoubleClick={ focusForm }
+                                                data-group-modifiers='grow'
+                                                >
+                                                    <HGroup modifiers='margin-s align-center' data-group-modifiers='grow'>
+                                                        <Icon name={ LAYER_ICONS[it.type] } />
+                                                        { it.name }
+                                                    </HGroup>
+                                            </button>
+
+                                            { element.template && !it.isLocked
+                                                ? <Icon name={ it.isLinked && 'link' } modifiers='s' />
+                                                : <Button
+                                                    modifiers='xs'
+                                                    disabled={ it.isLocked && element.template }
+                                                    onClick={ r.pipe(
+                                                        r.always([it.id, { isLocked: !it.isLocked }]),
+                                                        wire('lock.set')
+                                                    ) }>
+                                                    <Icon
+                                                        name={ it.isLocked ? 'lock' : 'unlock' }
+                                                        modifiers='xs' />
+                                                </Button> }
                                         </HGroup>
-                                    </button>
+                                    </div>
                                 )}
                             </VGroup>
                         </VGroup>

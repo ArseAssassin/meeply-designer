@@ -11,7 +11,7 @@ require('./file-browser.styl')
 
 
 module.exports = switchboard.component(
-    ({ signal, slot, propsProperty }) => {
+    ({ signal, slot, isAlive, propsProperty }) => {
         let chosenImage =
                 signal(
                     undefined,
@@ -28,7 +28,17 @@ module.exports = switchboard.component(
                 .take(1)
                 .onValue(({ onChange }) => onChange(imageId))
                 .to(slot('toggle'))
+            ),
+            focusFn = signal(
+                switchboard.slot.toFn(slot('focus'))
             )
+            .takeUntilBy(isAlive.filter(r.not).map(r.always(undefined)))
+
+        kefir.combine([
+            propsProperty.map(r.prop('onImageFocus')).filter(Boolean).take(1),
+            focusFn
+        ])
+        .onValue(([fn, focusFn]) => fn(focusFn))
 
         kefir.combine(
             [slot('upload')
@@ -46,8 +56,13 @@ module.exports = switchboard.component(
                 false,
 
                 slot('toggle'), r.not,
+                slot('focus'), r.T,
 
-                propsProperty.map(r.prop('value')).filter(r.not).take(1), r.T
+                propsProperty
+                .map(r.pick(words('value id')))
+                .skipDuplicates(r.equals)
+                .filter(({ value }) => !value),
+                r.T
             ),
             imageName:
                 propsProperty.map(r.prop('value'))
@@ -109,7 +124,10 @@ module.exports = switchboard.component(
                                                 <Type modifiers='align-center'>{ chosenImage.name }</Type>
                                                 <Type modifiers='align-center'>{ chosenImage.license }</Type>
 
-                                                <button onClick={ () => save(chosenImage.id) }>Save</button>
+                                                <HGroup>
+                                                    <button onClick={ () => save(undefined) }>Clear</button>
+                                                    <button onClick={ () => save(chosenImage.id) }>Save</button>
+                                                </HGroup>
                                             </VGroup>
                                             : null
                                         }

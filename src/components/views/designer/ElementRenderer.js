@@ -141,6 +141,7 @@ let renderers = {
                 <rect
                     onMouseDown={ wire('move.start') }
                     onClick={ onLayerInteract && r.pipe(cancel, r.always({ layer, type: 'click' }), onLayerInteract) }
+                    onDoubleClick={ onLayerInteract && r.pipe(cancel, r.always({ layer, type: 'doubleclick' }), onLayerInteract) }
                     x={ layer.x } y={ layer.y }
                     className={ modifiersToClass('element-view__size-indicator', status) }
                     width={ layer.width }
@@ -151,23 +152,25 @@ let renderers = {
     renderElement = (it, onLayerInteract, selectedLayer, zoomLevel) =>
         threadLast(it)(
             r.prop('body'),
+            r.reverse,
+            r.filter((it) => !it.hidden),
             r.map((it) =>
-                <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isLocked && 'locked') }>
+                <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
                     { React.cloneElement(
                         renderers[it.type || ''](it),
-                        onLayerInteract && {
+                        onLayerInteract && !it.isLocked && {
                             onMouseDown:
                                 r.pipe(cancel, r.always({ layer: it, type: 'mouseDown' }), onLayerInteract),
                             onMouseUp:
                                 r.pipe(cancel, r.always({ layer: it, type: 'mouseUp' }), onLayerInteract),
                         }
                     ) }
-                    <SizeIndicator
+                    { !it.isLocked && <SizeIndicator
                         type={ it.type }
                         zoomLevel={ zoomLevel }
                         selected={ selectedLayer === it.id }
                         onLayerInteract={ onLayerInteract }
-                        layer={ it } />
+                        layer={ it } /> }
                 </g>
             )
         )

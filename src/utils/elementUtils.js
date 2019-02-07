@@ -13,6 +13,6 @@ module.exports = {
                         : { isLinked: true }
                 )
             ))
-            .map((it) => ({ ...it, isLocked: true }))
+            .map((it) => ({ ...it, isCopy: true }))
     })
 }

@@ -9,17 +9,17 @@ module.exports = [
         }
     },
     {
-        name: 'Tile 1"',
-        body: {
-            width: 1,
-            height: 1,
-        }
-    },
-    {
         name: 'Tile 1.5"',
         body: {
             width: 1.5,
             height: 1.5
+        }
+    },
+    {
+        name: 'Tile 2"',
+        body: {
+            width: 2,
+            height: 2
         }
     },
     {
