@@ -21,6 +21,15 @@ require('./element.styl')
 let getLayer = (layer, layers) =>
         r.find(r.propEq('id', layer), layers),
 
+    mirror = (layer, vertical=false) =>
+        threadLast(vertical)(
+            layer.rotation % 180 === 0
+                ? Boolean
+                : r.not,
+            (it) => it ? 'mirrorV' : 'mirrorH',
+            (it) => r.always({ [it]: !layer[it] })
+        ),
+
     FormRenderer = switchboard.component(
         ({ propsProperty, ...rest }) => {
             let { slot } = rest,
@@ -106,14 +115,14 @@ let getLayer = (layer, layers) =>
                     <HGroup modifiers='align-center'>
                         <HGroup modifiers='margin-xs'>
                             w
-                            { capture(<FormField name='width'>
+                            { capture(<FormField name='width' reducer={ parseInt }>
                                 <Input.Number modifiers='number' />
                             </FormField>) }
                         </HGroup>
 
                         <HGroup modifiers='margin-xs'>
                             h
-                            { capture(<FormField name='height'>
+                            { capture(<FormField name='height' reducer={ parseInt }>
                                 <Input.Number modifiers='number' />
                             </FormField>) }
                         </HGroup>
@@ -124,7 +133,7 @@ let getLayer = (layer, layers) =>
                             <HGroup modifiers='align-center'>
                                 <HGroup modifiers='margin-s align-center'>
                                     Aa
-                                    {capture(<FormField name='fontSize'>
+                                    {capture(<FormField name='fontSize' reducer={ parseInt }>
                                         <Input.Number modifiers='number' />
                                     </FormField>)}
                                 </HGroup>
@@ -146,6 +155,45 @@ let getLayer = (layer, layers) =>
                             </HGroup>
                         </VGroup>
                     }
+
+                    { layer.type && <HGroup modifiers='margin-s'>
+                        <button
+                            onClick={ r.pipe(
+                                r.always({
+                                    rotation: ((layer.rotation || 0) - 90 + 360) % 360
+                                }),
+                                wire('componentForm.update')
+                            ) }
+                            className='element-view__tool'>
+                            <Icon name='rotate-ccw' />
+                        </button>
+
+                        <button
+                            onClick={ r.pipe(
+                                r.always({
+                                    rotation: ((layer.rotation || 0) + 90 + 360) % 360
+                                }),
+                                wire('componentForm.update')
+                            ) }
+                            className='element-view__tool'><Icon name='rotate-cw' />
+                        </button>
+
+                        <button
+                            onClick={ r.pipe(
+                                mirror(layer, false),
+                                wire('componentForm.update')
+                            ) }
+                            className='element-view__tool'><Icon name='mirror-h' />
+                        </button>
+
+                        <button
+                            onClick={ r.pipe(
+                                mirror(layer, true),
+                                wire('componentForm.update')
+                            ) }
+                            className='element-view__tool'><Icon name='mirror-v' />
+                        </button>
+                    </HGroup> }
                 </VGroup>
             </div>
     )

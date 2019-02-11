@@ -8,18 +8,27 @@ const TEXT_ALIGN = {
     right: { anchor: 'end', position: (it) => it / 2 }
 }
 
-let Image = switchboard.component(
-    ({ propsProperty }) => ({
-        href:
-            propsProperty
-            .map(r.path(words('layer body')))
-            .thru(resourcesModel.images.getById)
-            .map(r.prop('body'))
-            .skipDuplicates()
-    }),
-    ({ wiredState: { href }, layer: { x, y, width, height } }) =>
-        <image {...{ x, y, width, height, href }} />,
-)
+let getTransform = ({ rotation, mirrorH, mirrorV, x, y, width, height }) => [
+        rotation && `rotate(${rotation} ${ x + width / 2 } ${ y + height / 2 })`,
+        mirrorH && `translate(${ x * 2 + parseInt(width) } 0) scale(-1 1)`,
+        mirrorV && `translate(0 ${ y * 2 + parseInt(height) }) scale(1 -1)`
+    ].filter(Boolean).join(' '),
+
+    Image = switchboard.component(
+        ({ propsProperty }) => ({
+            href:
+                propsProperty
+                .map(r.path(words('layer body')))
+                .thru(resourcesModel.images.getById)
+                .map(r.prop('body'))
+                .skipDuplicates()
+        }),
+        ({ wiredState: { href }, layer }) =>
+            <image
+                href={ href }
+                transform={ getTransform(layer) }
+                {...r.pick(words('x y width height'), layer) } />,
+    )
 
 let renderers = {
         'image': (it) =>
@@ -28,6 +37,8 @@ let renderers = {
             <WrappingText
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
                 y={ it.y }
+                transform={ getTransform(it) }
+                isInverted={ it.rotation % 180 !== 0 }
                 helperClass=''
                 width={ it.width }
                 height={ it.height }

@@ -32,6 +32,10 @@ let icons = {
     hidden: require('./../../../node_modules/feather-icons/dist/icons/eye-off.svg'),
     lock: require('./../../../node_modules/feather-icons/dist/icons/lock.svg'),
     unlock: require('./../../../node_modules/feather-icons/dist/icons/unlock.svg'),
+    'rotate-cw': require('./../../../node_modules/feather-icons/dist/icons/rotate-cw.svg'),
+    'rotate-ccw': require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg'),
+    'mirror-h': require('./../../../node_modules/feather-icons/dist/icons/refresh-ccw.svg'),
+    'mirror-v': require('./mirror-v.svg'),
     key: require('./key.svg')
 }
 
