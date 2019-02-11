@@ -11,18 +11,13 @@ let uuid = require('uuid/v4'),
     Deck = require('components/views/designer/Deck.js'),
 
     componentForm = require('wireState/componentForm.js'),
-    saveTabState = require('wireState/saveTabState.js')
+    saveTabState = require('wireState/saveTabState.js'),
+
+    { addToDeck }= require('utils/gameModelUtils.js')
 
 require('./element.styl')
 
-let findName = (name, names, index=2) => {
-        let proposedName = `${name} #${index}`
-
-        return r.contains(proposedName, names)
-            ? findName(name, names, index + 1)
-            : proposedName
-    },
-    getLayer = (layer, layers) =>
+let getLayer = (layer, layers) =>
         r.find(r.propEq('id', layer), layers),
 
     FormRenderer = switchboard.component(
@@ -325,20 +320,10 @@ module.exports = switchboard.component(
         ], [elementId])
         .to(gameModel.elements.addLayer)
 
-        kefir.combine([slot('deck.add')], [elementId, element, gameModel.elements.signal])
-        .map(([_, elementId, element, elements]) => ({
-            template: element.template || elementId,
-            name: findName(
-                element.template
-                    ? r.find(r.propEq('id', element.template), elements).name
-                    : element.name,
-                elements.map(r.prop('name'))
-            ),
-            id: uuid(),
-            count: 1,
-            body: []
-        }))
-        .to(gameModel.elements.createElement)
+        addToDeck(kefir.combine(
+            [slot('deck.add')],
+            [element.map((it) => it.template || it.id)]
+        ).map(r.last))
         .flatMapLatest((it) =>
             propsProperty.map(r.prop('onFileChange')).take(1).map(r.pair(it.id))
         )

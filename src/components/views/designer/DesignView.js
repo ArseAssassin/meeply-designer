@@ -16,7 +16,8 @@ let uuid = require('uuid/v4'),
     resourcesModel = require('model/resourcesModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
 
-    fileUtils = require('utils/fileUtils.js')
+    fileUtils = require('utils/fileUtils.js'),
+    { addToDeck } = require('utils/gameModelUtils.js')
 
 require('./design-view.styl')
 
@@ -167,6 +168,10 @@ module.exports = switchboard.component(
         })
         .to(gameModel.elements.set)
 
+        addToDeck(slot('deck.add'))
+        .map(r.prop('id'))
+        .to(slot('elements.open'))
+
         return ({
             selectedTab:
                 kefir.combine([
@@ -271,6 +276,13 @@ module.exports = switchboard.component(
                                             element={ it }
                                             onDoubleClick={ wire('elements.open') }/>
                                     ) }
+
+                                    <FileExplorer.File
+                                        value='new-element'
+                                        onDoubleClick={ r.pipe(r.always(id), wire('deck.add')) }
+                                        name='Create component'>
+                                        <Icon name='create' />
+                                    </FileExplorer.File>
                                 </FileExplorer.Folder>
                             ) }
 
