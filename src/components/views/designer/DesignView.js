@@ -280,7 +280,7 @@ module.exports = switchboard.component(
                                     <FileExplorer.File
                                         value='new-element'
                                         onDoubleClick={ r.pipe(r.always(id), wire('deck.add')) }
-                                        name='Create component'>
+                                        name='Create card'>
                                         <Icon name='create' />
                                     </FileExplorer.File>
                                 </FileExplorer.Folder>

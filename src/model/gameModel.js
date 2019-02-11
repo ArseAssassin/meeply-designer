@@ -52,6 +52,20 @@ module.exports = switchboard.model(({ signal, slot }) => {
                             )
                             : it.body.concat({ id: layer, ...body })
                 }), it),
+
+            slot('element.layers.adjust'),
+            (it, [elementId, layerId, targetId]) =>
+                updateElement(elementId, (it) => ({
+                    body: threadLast(it.body)(
+                        r.filter((it) => it.id !== layerId),
+                        (layers) =>
+                            r.insert(
+                                r.findIndex(r.propEq('id', targetId), layers) + 1,
+                                r.find(r.propEq('id', layerId), it.body),
+                                layers
+                            ),
+                    )
+                }), it)
         ),
         findById = (it) =>
             kefir.combine([
@@ -114,6 +128,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
             addLayer: slot('element.layers.add'),
             deleteLayer: slot('element.layers.delete'),
             updateLayer: slot('element.layers.update'),
+            adjustLayer: slot('element.layers.adjust'),
             set: slot('elements.set')
         }
     })

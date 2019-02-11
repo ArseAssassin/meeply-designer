@@ -110,6 +110,15 @@
     &:hover
         border-color $white
 
+.element-view__layer
+    border-top 1px solid transparent
+
+.element-view__layer--targeted
+    border-top 1px solid darken($grey, 55%)
+
+    *
+        cursor move
+
 .element-view__layer button:not(.button)
     margin-negative-h--m()
     padding-h--m()

@@ -19,7 +19,7 @@ module.exports = ({ onFileChange, onDeckAdd, onDeckToggle, deckShown, element, d
                 ) }
 
                 <FileExplorer.File
-                    name='Create component'
+                    name='Create card'
                     onDoubleClick={ onDeckAdd }
                     value='create'>
                     <Icon name='create' />

@@ -26,8 +26,8 @@ let getLayer = (layer, layers) =>
         r.always({
             mirror: !layer.mirror,
             rotation:
-                isVertical && (layer.rotation || 0) % 180 === 0 ||
-                !isVertical && (layer.rotation || 0) % 180 !== 0
+                (isVertical && (layer.rotation || 0) % 180 === 0) ||
+                (!isVertical && (layer.rotation || 0) % 180 !== 0)
                     ? adjustRotation(layer.rotation, 180)
                     : layer.rotation
         }),
@@ -314,7 +314,40 @@ module.exports = switchboard.component(
                 Boolean,
 
                 slot('focusForm.set')
+            ),
+
+            isDragging = signal(
+                false,
+
+                kefir.merge([
+                    slot('drag.start'),
+                    kefir.fromEvents(document.body, 'mouseup').map(r.F)
+                ])
+                .flatMapLatest((it) =>
+                    !it ? kefir.constant(false) : kefir.later(200, it)
+                )
             )
+            .skipDuplicates(),
+
+            dragTarget = signal(
+                undefined,
+
+                slot('drag.target.set'),
+                isDragging.filter(r.not), r.always(undefined)
+            )
+
+        isDragging
+        .filter(Boolean)
+        .flatMapLatest((initial) =>
+            kefir.combine(
+                [isDragging.filter(r.not)],
+                [dragTarget.filter(Boolean), elementId]
+            )
+            .take(1)
+            .map(([_, target, elementId]) => [elementId, initial, target])
+        )
+        .filter(([_, a, b]) => a !== b)
+        .to(gameModel.elements.adjustLayer)
 
         kefir.combine(
             [slot('layer.interact').filter(r.propEq('type', 'doubleclick'))],
@@ -484,6 +517,7 @@ module.exports = switchboard.component(
             selectedLayer,
             deckShown,
             deck,
+            isDragging,
             focusForm,
             templateWarningOpen: signal(
                 false,
@@ -498,10 +532,11 @@ module.exports = switchboard.component(
                 .flatMapLatest(() =>
                     kefir.defaultValue(true, kefir.fromEvents(document.body, 'mouseup').map(r.F).take(1))
                 )
-            )
+            ),
+            dragTarget
         })
     }),
-    ({ wiredState: { focusForm, zoomLevel, grabbing, deck, deckShown, templateWarningOpen, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire, onFileChange }) =>
+    ({ wiredState: { isDragging, focusForm, zoomLevel, grabbing, deck, deckShown, templateWarningOpen, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize, targetLayer, dragTarget }, wire, onFileChange }) =>
         <div className='element-view'>
             <Deck element={ element } deck={ deck } deckShown={ deckShown } onDeckToggle={ wire('deck.toggle') } onFileChange={ wire('file.change') } onDeckAdd={ wire('deck.add') } />
             <div className='element-view__designer' ref={ wire('ref') }>
@@ -563,7 +598,7 @@ module.exports = switchboard.component(
                                     <button onClick={ (it) => {
                                         wire('templateWarning.toggle')()
                                         onFileChange(element.template)
-                                    } }>Modify template</button>
+                                    } }>Take me to the template</button>
                                 </HGroup>
                             </VGroup>
                         </Modal>
@@ -604,12 +639,14 @@ module.exports = switchboard.component(
 
                             <VGroup modifiers='grow margin-none' data-group-modifiers='grow'>
                                 { r.reverse(layers).map((it) =>
-                                    <div className={
-                                        modifiersToClass(
-                                            'element-view__layer',
-                                            selectedLayer === it.id && 'selected',
-                                            element.template && it.isLocked && 'locked'
-                                        ) }>
+                                    <div onMouseOver={ isDragging ? r.pipe(r.always(it.id), wire('drag.target.set')) : Boolean }
+                                        className={
+                                            modifiersToClass(
+                                                'element-view__layer',
+                                                selectedLayer === it.id && 'selected',
+                                                element.template && it.isLocked && 'locked',
+                                                dragTarget === it.id && 'targeted'
+                                            ) }>
                                         <HGroup modifiers='margin-xs grow align-center'>
                                             <Button
                                                 style={{ visibility: it.type === DOCUMENT && 'hidden' }}
@@ -619,8 +656,8 @@ module.exports = switchboard.component(
                                             </Button>
 
                                             <button
-                                                onClick={ r.pipe(r.always(it.id), wire('layer.select')) }
                                                 onDoubleClick={ focusForm }
+                                                onMouseDown={ r.pipe(r.always(it.id), r.tap(wire('layer.select')), !it.id !== DOCUMENT ? wire('drag.start') : Boolean) }
                                                 data-group-modifiers='grow'
                                                 >
                                                     <HGroup modifiers='margin-s align-center' data-group-modifiers='grow'>
