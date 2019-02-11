@@ -498,14 +498,20 @@ module.exports = switchboard.component(
                     </div>
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
                         <Modal isOpen={ templateWarningOpen } heading='Modify template' onClose={ wire('templateWarning.toggle') }>
-                            <Type modifiers='multiline'>New layers can be added only to the deck template. To create a layer that is shown only for this card, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> icon.</Type>
+                            <VGroup modifiers='margin-s'>
+                                <Type modifiers='multiline'>New layers can be added only to the deck template. To create a layer that is shown only for this card, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> button.</Type>
 
-                            <HGroup modifiers='grow justify-end'>
-                                <button onClick={ (it) => {
-                                    wire('templateWarning.toggle')()
-                                    onFileChange(element.template)
-                                } }>Modify template</button>
-                            </HGroup>
+                                <HGroup modifiers='grow justify-end margin-s'>
+                                    <button onClick={ wire('templateWarning.toggle') }>
+                                        Cancel
+                                    </button>
+
+                                    <button onClick={ (it) => {
+                                        wire('templateWarning.toggle')()
+                                        onFileChange(element.template)
+                                    } }>Modify template</button>
+                                </HGroup>
+                            </VGroup>
                         </Modal>
 
                         <VGroup data-group-modifiers='grow' modifiers='grow'>
