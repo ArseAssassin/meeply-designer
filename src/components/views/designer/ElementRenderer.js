@@ -174,12 +174,12 @@ let renderers = {
                                 r.pipe(cancel, r.always({ layer: it, type: 'mouseUp' }), onLayerInteract),
                         }
                     ) }
-                    { !it.isLocked && <SizeIndicator
+                    <SizeIndicator
                         type={ it.type }
                         zoomLevel={ zoomLevel }
                         selected={ selectedLayer === it.id }
-                        onLayerInteract={ onLayerInteract }
-                        layer={ it } /> }
+                        onLayerInteract={ !it.isLocked && onLayerInteract }
+                        layer={ it } />
                 </g>
             )
         )

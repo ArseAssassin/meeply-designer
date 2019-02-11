@@ -657,7 +657,7 @@ module.exports = switchboard.component(
 
                                             <button
                                                 onDoubleClick={ focusForm }
-                                                onMouseDown={ r.pipe(r.always(it.id), r.tap(wire('layer.select')), !it.id !== DOCUMENT ? wire('drag.start') : Boolean) }
+                                                onMouseDown={ r.pipe(r.always(it.id), r.tap(wire('layer.select')), !it.id !== DOCUMENT && !element.template ? wire('drag.start') : Boolean) }
                                                 data-group-modifiers='grow'
                                                 >
                                                     <HGroup modifiers='margin-s align-center' data-group-modifiers='grow'>
