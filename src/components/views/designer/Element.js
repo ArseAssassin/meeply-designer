@@ -2,6 +2,7 @@ let uuid = require('uuid/v4'),
     { required } = require('valivali'),
 
     Input = require('components/common/Input.js'),
+    Modal = require('components/common/Modal.js'),
     FormField = require('components/forms/FormField.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     Button = require('components/common/Button.js'),
@@ -430,6 +431,11 @@ module.exports = switchboard.component(
             deckShown,
             deck,
             focusForm,
+            templateWarningOpen: signal(
+                false,
+
+                slot('templateWarning.toggle'), r.not
+            ),
             documentMode: selectedLayer.map(r.equals(DOCUMENT)),
             grabbing: signal(
                 false,
@@ -441,7 +447,7 @@ module.exports = switchboard.component(
             )
         })
     }),
-    ({ wiredState: { focusForm, zoomLevel, grabbing, deck, deckShown, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
+    ({ wiredState: { focusForm, zoomLevel, grabbing, deck, deckShown, templateWarningOpen, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire, onFileChange }) =>
         <div className='element-view'>
             <Deck element={ element } deck={ deck } deckShown={ deckShown } onDeckToggle={ wire('deck.toggle') } onFileChange={ wire('file.change') } onDeckAdd={ wire('deck.add') } />
             <div className='element-view__designer' ref={ wire('ref') }>
@@ -491,13 +497,23 @@ module.exports = switchboard.component(
                         )(r.find(r.propEq('id', selectedLayer), layers)) }
                     </div>
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
+                        <Modal isOpen={ templateWarningOpen } heading='Modify template' onClose={ wire('templateWarning.toggle') }>
+                            <Type modifiers='multiline'>New layers can be added only to the deck template. To create a layer that is shown only for this card, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> icon.</Type>
+
+                            <HGroup modifiers='grow justify-end'>
+                                <button onClick={ (it) => {
+                                    wire('templateWarning.toggle')()
+                                    onFileChange(element.template)
+                                } }>Modify template</button>
+                            </HGroup>
+                        </Modal>
+
                         <VGroup data-group-modifiers='grow' modifiers='grow'>
                             <HGroup modifiers='justify-space-between align-center'>
                                 <HGroup modifiers='margin-xs'>
                                     <button
-                                        disabled={ element.template }
                                         className='element-view__add-layer'
-                                        onClick={ wire('layers.image.add') }>
+                                        onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.image.add') }>
                                         <HGroup modifiers='margin-xs'>
                                             <Icon name='image' />
                                             <Icon name='plus' />
@@ -505,9 +521,8 @@ module.exports = switchboard.component(
                                     </button>
 
                                     <button
-                                        disabled={ element.template }
                                         className='element-view__add-layer'
-                                        onClick={ wire('layers.text.add') }>
+                                        onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
                                         <HGroup modifiers='margin-xs'>
                                             <Icon name='type' />
                                             <Icon name='plus' />

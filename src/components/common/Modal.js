@@ -14,7 +14,7 @@ module.exports = ({ children, heading, isOpen, onClose }) =>
                     <VGroup>
                         <div className='modal__heading'>
                             <HGroup modifiers='grow align-center justify-space-between'>
-                                { heading }
+                                <div>{ heading }</div>
                                 <a href='#modal' onClick={ r.pipe(cancel, onClose) }><Icon name='x' /></a>
                             </HGroup>
                         </div>
