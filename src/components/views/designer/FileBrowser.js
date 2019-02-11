@@ -124,8 +124,7 @@ module.exports = switchboard.component(
                                                 <Type modifiers='align-center'>{ chosenImage.name }</Type>
                                                 <Type modifiers='align-center'>{ chosenImage.license }</Type>
 
-                                                <HGroup>
-                                                    <button onClick={ () => save(undefined) }>Clear</button>
+                                                <HGroup modifiers='grow justify-center'>
                                                     <button onClick={ () => save(chosenImage.id) }>Save</button>
                                                 </HGroup>
                                             </VGroup>
