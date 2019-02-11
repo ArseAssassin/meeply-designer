@@ -102,6 +102,12 @@ module.exports = switchboard.component(
 
                     slot('search.set')
                 )
+                .flatMapLatest((it) =>
+                    it === ''
+                        ? kefir.constant('')
+                        : kefir.later(700, it)
+                )
+                .toProperty()
 
         kefir.combine(
             [slot('delete.confirm')],
@@ -112,14 +118,6 @@ module.exports = switchboard.component(
 
         return ({
             search,
-            confirmedSearch:
-                search
-                .flatMapLatest((it) =>
-                    it === ''
-                        ? kefir.constant('')
-                        : kefir.later(700, it)
-                )
-                .toProperty(),
             selected,
             selectedComponent,
             isEditing: signal(
@@ -144,8 +142,8 @@ module.exports = switchboard.component(
             path
         })
     },
-    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, confirmedSearch, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
-        let isSearching = confirmedSearch.trim().length > 0,
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+        let isSearching = search.trim().length > 0,
             contents =
                 !isSearching
                     ? resolvePath(path, React.Children.toArray(children))
@@ -153,10 +151,10 @@ module.exports = switchboard.component(
                         parseComponentsFromTree,
                         r.filter((it) =>
                             it.props.name &&
-                            it.props.name.toLowerCase().indexOf(confirmedSearch.toLowerCase()) > -1
+                            it.props.name.toLowerCase().indexOf(search.toLowerCase()) > -1
                         ),
                         r.uniqBy(r.path(words('props value'))),
-                        r.sortBy((it) => levenshtein.get(confirmedSearch, it.props.name))
+                        r.sortBy((it) => levenshtein.get(search, it.props.name))
                     )
 
         return <div className={ modifiersToClass('file-explorer', modifiers) }>
@@ -206,7 +204,7 @@ module.exports = switchboard.component(
                                 <Icon name='zoom' modifiers='m' />
                                 <Input.Text
                                     placeholder='Search'
-                                    value={ search }
+                                    defaultValue={ search }
                                     onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
                             </HGroup>
                         </label>
