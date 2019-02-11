@@ -116,6 +116,30 @@ module.exports = switchboard.component(
         .filter(r.last)
         .onValue(([_, onDelete]) => onDelete())
 
+        kefir.combine([
+            slot('selected.items.ref')
+            .filter(Boolean)
+            .map((it) => it.parentNode)
+            .map((it) => [it, r.pick(words('top height bottom'), it.getBoundingClientRect())])
+            .skipDuplicates(r.equals),
+
+            slot('selected.item.ref')
+            .filter(Boolean)
+            .map((it) => r.pick(words('top height bottom'), it.getBoundingClientRect()))
+            .skipDuplicates(r.equals)
+        ], [propsProperty.map(r.prop('autoScroll')).skipDuplicates()])
+        .filter(r.last)
+        .onValue(([[ref, c], o]) => {
+            // if (o.top < c.top + ref.scrollTop || o.bottom > c.bottom + ref.scrollTop) {
+                if (c.top + c.height < o.bottom) {
+                    ref.scrollTop = o.bottom + ref.scrollTop - c.top - c.height
+                } else if (o.top < c.top) {
+                    ref.scrollTop = ref.scrollTop - (c.top - o.top)
+                }
+            // }
+
+        })
+
         return ({
             search,
             selected,
@@ -142,7 +166,7 @@ module.exports = switchboard.component(
             path
         })
     },
-    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled }) => {
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled, onSelectedRef }) => {
         let isSearching = search.trim().length > 0,
             contents =
                 !isSearching
@@ -229,6 +253,7 @@ module.exports = switchboard.component(
                 }
 
                 <div data-group-modifiers='grow'
+                     ref={ wire('selected.items.ref') }
                      onClick={ (it) => it.target === it.currentTarget && wire('unselect')() }>
                     <Modal isOpen={ isDeleting } heading='Confirm delete' onClose={ wire('delete.toggle') }>
                         <VGroup>
@@ -249,7 +274,8 @@ module.exports = switchboard.component(
                         <div className='file-explorer__items' data-group-modifiers='grow'>
                             { r.take(shownItems, contents).map((it, idx) =>
                                 <div key={ it.props.value } className={ modifiersToClass('file-explorer__file-wrapper', it.props.value === selected && 'selected') }
-                                     onClick={ r.pipe(r.always(it.props.value), r.tap(onChange || Boolean), wire('select')) }>
+                                     onClick={ r.pipe(r.always(it.props.value), r.tap(onChange || Boolean), wire('select')) }
+                                    ref={ it.props.value === selected && wire('selected.item.ref') }>
                                     { React.cloneElement(it, {
                                         navigateToThis: r.pipe(
                                             r.always(path.concat(it.props.value)),

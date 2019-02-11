@@ -8,6 +8,7 @@ module.exports = ({ onFileChange, onDeckAdd, onDeckToggle, deckShown, element, d
         <div className='element-view__cards'>
             <FileExplorer
                 mustSelect
+                autoScroll
                 hideBreadcrumbs
                 toolbarEnabled
                 onChange={ onFileChange }
