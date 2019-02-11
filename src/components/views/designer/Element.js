@@ -551,6 +551,7 @@ module.exports = switchboard.component(
                     </HGroup>
                 </div>
                 <ElementRenderer
+                    interactive
                     modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
                     realTime
                     debounceUpdates={ 0 }

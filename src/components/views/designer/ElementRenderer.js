@@ -159,7 +159,7 @@ let renderers = {
                 { points.map((it, idx) => it(layer.x, layer.y, layer.width, layer.height, wire('resize.start'))) }
             </g>
     ),
-    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel) =>
+    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel, interactive) =>
         threadLast(it)(
             r.prop('body'),
             r.filter((it) => !it.hidden),
@@ -174,12 +174,13 @@ let renderers = {
                                 r.pipe(cancel, r.always({ layer: it, type: 'mouseUp' }), onLayerInteract),
                         }
                     ) }
-                    <SizeIndicator
+
+                    { interactive && <SizeIndicator
                         type={ it.type }
                         zoomLevel={ zoomLevel }
                         selected={ selectedLayer === it.id }
                         onLayerInteract={ !it.isLocked && onLayerInteract }
-                        layer={ it } />
+                        layer={ it } /> }
                 </g>
             )
         )
@@ -208,7 +209,7 @@ module.exports = switchboard.component(
                 )
         }
     },
-    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style }) =>
+    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width='100%' height='100%'
@@ -225,6 +226,6 @@ module.exports = switchboard.component(
                     height={ element.height }
                     x='0'
                     y='0' /> }
-            { viewBox && renderElement(element, onLayerInteract, selectedLayer, zoomLevel) }
+            { viewBox && renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive) }
         </svg>
 )

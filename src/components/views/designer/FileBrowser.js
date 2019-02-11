@@ -185,16 +185,6 @@ module.exports = switchboard.component(
                                         <img src={ it.body } alt='thumbnail' />
                                     </FileExplorer.File>
                                 ) }
-
-                                { userImages.map((it) =>
-                                    <FileExplorer.File
-                                        value={ it.id }
-                                        key={ it.id }
-                                        name={ it.name }
-                                        onDoubleClick={ () => save(it.id) }>
-                                        <img src={ it.body } alt='thumbnail' />
-                                    </FileExplorer.File>
-                                ) }
                             </FileExplorer>
                         </div>
                     </HGroup>
