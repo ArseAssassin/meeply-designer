@@ -21,14 +21,16 @@ require('./element.styl')
 let getLayer = (layer, layers) =>
         r.find(r.propEq('id', layer), layers),
 
-    mirror = (layer, vertical=false) =>
-        threadLast(vertical)(
-            layer.rotation % 180 === 0
-                ? Boolean
-                : r.not,
-            (it) => it ? 'mirrorV' : 'mirrorH',
-            (it) => r.always({ [it]: !layer[it] })
-        ),
+    adjustRotation = (rotation, delta) => ((rotation || 0) + delta + 360) % 360,
+    getMirror = (layer, isVertical=false) =>
+        r.always({
+            mirror: !layer.mirror,
+            rotation:
+                isVertical && layer.rotation % 180 === 0 ||
+                !isVertical && layer.rotation % 180 !== 0
+                    ? adjustRotation(layer.rotation, 180)
+                    : layer.rotation
+        }),
 
     FormRenderer = switchboard.component(
         ({ propsProperty, ...rest }) => {
@@ -160,7 +162,7 @@ let getLayer = (layer, layers) =>
                         <button
                             onClick={ r.pipe(
                                 r.always({
-                                    rotation: ((layer.rotation || 0) - 90 + 360) % 360
+                                    rotation: adjustRotation(layer.rotation, -90)
                                 }),
                                 wire('componentForm.update')
                             ) }
@@ -171,7 +173,7 @@ let getLayer = (layer, layers) =>
                         <button
                             onClick={ r.pipe(
                                 r.always({
-                                    rotation: ((layer.rotation || 0) + 90 + 360) % 360
+                                    rotation: adjustRotation(layer.rotation, 90)
                                 }),
                                 wire('componentForm.update')
                             ) }
@@ -180,7 +182,7 @@ let getLayer = (layer, layers) =>
 
                         <button
                             onClick={ r.pipe(
-                                mirror(layer, false),
+                                getMirror(layer, false),
                                 wire('componentForm.update')
                             ) }
                             className='element-view__tool'><Icon name='mirror-h' />
@@ -188,7 +190,7 @@ let getLayer = (layer, layers) =>
 
                         <button
                             onClick={ r.pipe(
-                                mirror(layer, true),
+                                getMirror(layer, true),
                                 wire('componentForm.update')
                             ) }
                             className='element-view__tool'><Icon name='mirror-v' />
@@ -346,6 +348,8 @@ module.exports = switchboard.component(
                 body: undefined,
                 x: 0,
                 y: 0,
+                rotation: 0,
+                mirror: false,
                 id: uuid()
             }))
         ], [elementId])
@@ -364,6 +368,8 @@ module.exports = switchboard.component(
                 fontSize: 12,
                 x: 0,
                 y: 0,
+                rotation: 0,
+                mirror: false,
                 id: uuid()
             }))
         ], [elementId])

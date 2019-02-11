@@ -8,10 +8,9 @@ const TEXT_ALIGN = {
     right: { anchor: 'end', position: (it) => it / 2 }
 }
 
-let getTransform = ({ rotation, mirrorH, mirrorV, x, y, width, height }) => [
+let getTransform = ({ rotation, mirror, x, y, width, height }) => [
         rotation && `rotate(${rotation} ${ x + width / 2 } ${ y + height / 2 })`,
-        mirrorH && `translate(${ x * 2 + parseInt(width) } 0) scale(-1 1)`,
-        mirrorV && `translate(0 ${ y * 2 + parseInt(height) }) scale(1 -1)`
+        mirror && `translate(${ x * 2 + parseInt(width) } 0) scale(-1 1)`
     ].filter(Boolean).join(' '),
 
     Image = switchboard.component(
