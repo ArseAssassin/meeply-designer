@@ -152,7 +152,6 @@ let renderers = {
     renderElement = (it, onLayerInteract, selectedLayer, zoomLevel) =>
         threadLast(it)(
             r.prop('body'),
-            r.reverse,
             r.filter((it) => !it.hidden),
             r.map((it) =>
                 <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
@@ -191,6 +190,12 @@ module.exports = switchboard.component(
         .onValue((onClick) => onClick())
 
         return {
+            updateBy:
+                propsProperty.map(r.prop('realTime')).skipDuplicates()
+                .flatMapLatest((it) =>
+                    it ? propsProperty
+                       : propsProperty.skipDuplicates(r.equals).debounce(700)
+                )
         }
     },
     ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style }) =>

@@ -10,6 +10,7 @@ let uuid = require('uuid/v4'),
     FileBrowser = require('components/views/designer/FileBrowser.js'),
     gameModel = require('model/gameModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
+    Deck = require('components/views/designer/Deck.js'),
 
     componentForm = require('wireState/componentForm.js'),
     saveTabState = require('wireState/saveTabState.js')
@@ -457,33 +458,9 @@ module.exports = switchboard.component(
             )
         })
     }),
-    ({ wiredState: { deckShown, focusForm, zoomLevel, grabbing, deck, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
+    ({ wiredState: { focusForm, zoomLevel, grabbing, deck, deckShown, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize }, wire }) =>
         <div className='element-view'>
-            <div className={ modifiersToClass('element-view__deck', deckShown && 'shown') }>
-                <button className='element-view__tab' onClick={ wire('deck.toggle') }>Deck</button>
-
-                <div className='element-view__cards'>
-                    <FileExplorer
-                        mustSelect
-                        hideBreadcrumbs
-                        toolbarEnabled
-                        onChange={ wire('file.change') }
-                        modifiers='column'
-                        defaultValue={ element.id }>
-                        { deck.map((it) =>
-                            <FileFace key={ it.id } { ...(FileFace.params(it)) } />
-                        ) }
-
-                        <FileExplorer.File
-                            name='Create component'
-                            onDoubleClick={ wire('deck.add') }
-                            value='create'>
-                            <Icon name='create' />
-                        </FileExplorer.File>
-                    </FileExplorer>
-                </div>
-            </div>
-
+            <Deck element={ element } deck={ deck } deckShown={ deckShown } onDeckToggle={ wire('deck.toggle') } onFileChange={ wire('file.change') } onDeckAdd={ wire('deck.add') } />
             <div className='element-view__designer' ref={ wire('ref') }>
                 <div className='element-view__zoom-level'>
                     <HGroup modifiers='margin-s align-center'>
@@ -497,6 +474,7 @@ module.exports = switchboard.component(
                 </div>
                 <ElementRenderer
                     modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
+                    realTime
                     debounceUpdates={ 0 }
                     element={ element }
                     zoomLevel={ zoomLevel }
