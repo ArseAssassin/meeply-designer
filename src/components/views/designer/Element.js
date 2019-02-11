@@ -26,8 +26,8 @@ let getLayer = (layer, layers) =>
         r.always({
             mirror: !layer.mirror,
             rotation:
-                isVertical && layer.rotation % 180 === 0 ||
-                !isVertical && layer.rotation % 180 !== 0
+                isVertical && (layer.rotation || 0) % 180 === 0 ||
+                !isVertical && (layer.rotation || 0) % 180 !== 0
                     ? adjustRotation(layer.rotation, 180)
                     : layer.rotation
         }),

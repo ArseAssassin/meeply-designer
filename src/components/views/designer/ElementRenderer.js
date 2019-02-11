@@ -37,7 +37,7 @@ let renderers = {
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
                 y={ it.y }
                 transform={ getTransform(it) }
-                isInverted={ it.rotation % 180 !== 0 }
+                isInverted={ (it.rotation || 0) % 180 !== 0 }
                 helperClass=''
                 width={ it.width }
                 height={ it.height }
