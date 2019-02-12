@@ -76,6 +76,26 @@ let getLayer = (layer, layers) =>
         ({ wiredState: { capture }, wire, layer, isSlave }) =>
             <div className='element-view__layer-form'>
                 <VGroup>
+                    {layer.type === 'text' && <HGroup modifiers='margin-xs'>
+                        <button
+                            className='element-view__tool'
+                            onClick={ r.pipe(
+                                r.always({ isBold: !layer.isBold }),
+                                wire('componentForm.update')
+                            ) }>
+                            <Icon name='bold' />
+                        </button>
+
+                        <button
+                            className='element-view__tool'
+                            onClick={ r.pipe(
+                                r.always({ fontStyle: layer.fontStyle === 'italic' ? undefined : 'italic' }),
+                                wire('componentForm.update')
+                            ) }>
+                            <Icon name='italic' />
+                        </button>
+                    </HGroup>}
+
                     {layer.type === 'text' && capture(<FormField name='body'>
                         <Input.Textarea _ref={ wire('ref') } />
                     </FormField>)}
@@ -399,6 +419,8 @@ module.exports = switchboard.component(
                 hidden: false,
                 textAlign: 'center',
                 fontSize: 12,
+                fontStyle: undefined,
+                isBold: false,
                 x: 0,
                 y: 0,
                 rotation: 0,

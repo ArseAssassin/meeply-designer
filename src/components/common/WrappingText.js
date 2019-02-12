@@ -3,14 +3,14 @@ let { measureSVGText } = require('utils/layoutUtils.js')
 const
     SPACE = '\u00A0'
 
-module.exports = ({ x, y, isInverted, children, height, width, helperClass, ...props }) => {
+module.exports = ({ x, y, isInverted, children, height, width, helperClass, isBold, fontStyle, ...props }) => {
     if (!children) {
         return null
     }
 
     let availableWidth = isInverted ? height : width,
         ratio = !isInverted ? 0 : height - width,
-        style = `font-size: ${props.style.fontSize}`,
+        style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''};`,
         spaceWidth = measureSVGText(SPACE, helperClass, style)[0][0].width,
         content = threadLast(measureSVGText(children, helperClass, style))(
             r.map(r.reduce(
@@ -35,5 +35,5 @@ module.exports = ({ x, y, isInverted, children, height, width, helperClass, ...p
             )
         )
 
-    return <text { ...props }>{ content }</text>
+    return <text font-weight={ isBold ? 'bold' : undefined } font-style={ fontStyle } { ...props }>{ content }</text>
 }
