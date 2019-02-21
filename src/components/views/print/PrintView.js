@@ -71,7 +71,7 @@ module.exports = switchboard.component(
                 ) }
             </div>
 
-            <iframe ref={ wire('print.ref') } className='print__iframe' src='#print'>
+            <iframe title='Print' ref={ wire('print.ref') } className='print__iframe' src='#print'>
 
             </iframe>
         </div>
