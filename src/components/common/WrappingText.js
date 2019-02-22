@@ -1,7 +1,8 @@
 let { measureSVGText } = require('utils/layoutUtils.js')
 
 const
-    SPACE = '\u00A0'
+    SPACE = '\u00A0',
+    FONT_FAMILY = '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif'
 
 module.exports = ({ x, y, isInverted, children, height, width, helperClass, isBold, fontStyle, ...props }) => {
     if (!children) {
@@ -10,7 +11,7 @@ module.exports = ({ x, y, isInverted, children, height, width, helperClass, isBo
 
     let availableWidth = isInverted ? height : width,
         ratio = !isInverted ? 0 : height - width,
-        style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''};`,
+        style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''}; font-family: ${FONT_FAMILY};`,
         spaceWidth = measureSVGText(SPACE, helperClass, style)[0][0].width,
         content = threadLast(measureSVGText(children, helperClass, style))(
             r.map(r.reduce(
@@ -29,7 +30,7 @@ module.exports = ({ x, y, isInverted, children, height, width, helperClass, isBo
             r.unnest,
             r.filter(r.prop('length')),
             r.addIndex(r.map)((it, idx) =>
-                <tspan x={ x + width / 2 } y={ y + ratio / 2 + it[0].height * (idx + 1)} key={ idx }>
+                <tspan x={ x + width / 2 } y={ y + ratio / 2 + it[0].height * (idx + 1)} key={ idx } style={{ fontFamily: FONT_FAMILY }}>
                     { it.map(r.prop('word')).join(SPACE) }
                 </tspan>
             )
