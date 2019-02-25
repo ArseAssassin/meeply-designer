@@ -490,6 +490,7 @@ module.exports = function(webpackEnv) {
           },
           isEnvProduction
             ? {
+                gtag: 'UA-62567911-3',
                 minify: {
                   removeComments: true,
                   collapseWhitespace: true,
