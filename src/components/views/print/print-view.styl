@@ -5,22 +5,37 @@
 .print
     position relative
 
-.print__page .element
-    position relative
-    display inline-block
-    border 1px solid darken($grey, 30%)
-    break-inside avoid-page
+.print__guide
+    fill none
+    stroke $black
+    stroke-width 1px
 
 .print__page
-    text-align center
-
-.print__iframe
-    width 100%
     display block
-    border 0
-    width 210mm
-    height 297mm
-    margin 0 auto
+    margin 0 auto 10px
+    border 1px solid darken($grey, 15%)
 
-body
-    background-color $white
+@media print
+    .print__page
+        border 0
+        margin 0
+        width 210mm
+        height 297mm
+
+    .design-view__toolbar
+        display none
+
+    .tab-bar__tabs
+        display none
+
+    .design-view > .tab-bar
+        margin-top 0 !important
+
+    .tab-bar__body
+        padding 0
+
+    .print__tools
+        display none
+
+    #root
+        position static

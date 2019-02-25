@@ -16,6 +16,11 @@ module.exports = {
             { label && <span className='input__label'>{ label }</span> }
             <input type='number' className={ modifiersToClass('input', 'number', modifiers) } { ...rest } />
         </VGroup>,
+    Checkbox: ({ label, modifiers='', ...rest }) =>
+        <label><HGroup modifiers='margin-s'>
+            <input type='checkbox' className={ modifiersToClass('input', 'checkbox', modifiers) } { ...rest } />
+            { label && <span className='input__label'>{ label }</span> }
+        </HGroup></label>,
     Slider: ({ modifiers='', ...rest }) =>
         <input type='range' className={ modifiersToClass('input-range',  modifiers) } />
 }

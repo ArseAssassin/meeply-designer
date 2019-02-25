@@ -44,8 +44,8 @@ let renderers = {
                 isBold={ it.isBold }
                 fontStyle={ it.fontStyle }
                 style={{ fontSize: it.fontSize + 'pt', fill: it.color }}
-                alignment-baseline='hanging'
-                text-anchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
+                alignmentBaseline='hanging'
+                textAnchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
                 { it.body }
             </WrappingText>,
         '': (it) => <text>?</text>
@@ -211,16 +211,19 @@ module.exports = switchboard.component(
                 )
         }
     },
-    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive }) =>
+    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
-             width='100%' height='100%'
+             width={ useExactSize ? element.width : '100%'}
+             height={ useExactSize ? element.height : '100%'}
              xmlns='http://www.w3.org/2000/svg'
              onMouseDown={ r.pipe(r.tap(wire('click.start')), onMouseDown || Boolean) }
              onWheel={ onMouseWheel }
              onClick={ wire('click.end') }
              style={ style }
-             ref={ _ref }>
+             ref={ _ref }
+             x={ x }
+             y={ y }>
             { showDocument && viewBox &&
                 <rect
                     className='element-view__canvas'

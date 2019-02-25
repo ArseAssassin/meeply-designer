@@ -36,5 +36,5 @@ module.exports = ({ x, y, isInverted, children, height, width, helperClass, isBo
             )
         )
 
-    return <text font-weight={ isBold ? 'bold' : undefined } font-style={ fontStyle } { ...props }>{ content }</text>
+    return <text fontWeight={ isBold ? 'bold' : undefined } fontStyle={ fontStyle } { ...props }>{ content }</text>
 }
