@@ -41,7 +41,7 @@ let tabTypes = {
                     wire('elements.open')(it.id)
                 }
             }),
-            label: () => '*Create new deck'
+            label: () => '*New component set'
         },
         print: {
             component: PrintView,
@@ -280,7 +280,7 @@ module.exports = switchboard.component(
                                     <FileExplorer.File
                                         value='new-element'
                                         onDoubleClick={ r.pipe(r.always(id), wire('deck.add')) }
-                                        name='Create card'>
+                                        name='Create component'>
                                         <Icon name='create' />
                                     </FileExplorer.File>
                                 </FileExplorer.Folder>
@@ -308,7 +308,7 @@ module.exports = switchboard.component(
 
                             <FileExplorer.File
                                 value='create'
-                                name='Create new deck'
+                                name='New component set'
                                 onDoubleClick={ wire('elements.new') }>
                                 <Icon name='create' />
                             </FileExplorer.File>

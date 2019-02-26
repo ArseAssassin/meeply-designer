@@ -17,7 +17,7 @@ const
 module.exports = switchboard.component(
     componentForm({
         name: {
-            defaultValue: 'New deck',
+            defaultValue: 'New component',
             validator: required()
         },
         template: {
@@ -36,7 +36,7 @@ module.exports = switchboard.component(
             onSubmit
         ) }>
             <VGroup>
-                <Type modifiers='heading'>Create new deck</Type>
+                <Type modifiers='heading'>Create new component set</Type>
 
                 <HGroup modifiers='align-end'>
                     {capture(<FormField name='name'>

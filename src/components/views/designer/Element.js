@@ -489,10 +489,10 @@ module.exports = switchboard.component(
                         ? index - 1
                         : index + 1
 
-            onFileChange(deck[nextIndex].id)
+            if (deck[nextIndex]) {
+                onFileChange(deck[nextIndex].id)
+            }
         })
-        .map(r.head)
-        .to(gameModel.elements.deleteElement)
 
         return ({
             element,
@@ -560,7 +560,14 @@ module.exports = switchboard.component(
     }),
     ({ wiredState: { isDragging, focusForm, zoomLevel, grabbing, deck, deckShown, templateWarningOpen, documentMode, selectedLayer, offset, layers, selectedTool, element, canvasSize, targetLayer, dragTarget }, wire, onFileChange }) =>
         <div className='element-view'>
-            <Deck element={ element } deck={ deck } deckShown={ deckShown } onDeckToggle={ wire('deck.toggle') } onFileChange={ wire('file.change') } onDeckAdd={ wire('deck.add') } />
+            <Deck
+                onDelete={ wire('element.delete') }
+                element={ element }
+                deck={ deck }
+                deckShown={ deckShown }
+                onDeckToggle={ wire('deck.toggle') }
+                onFileChange={ wire('file.change') }
+                onDeckAdd={ wire('deck.add') } />
             <div className='element-view__designer' ref={ wire('ref') }>
                 <div className='element-view__zoom-level'>
                     <HGroup modifiers='margin-s align-center'>
@@ -611,7 +618,7 @@ module.exports = switchboard.component(
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
                         <Modal isOpen={ templateWarningOpen } heading='Modify template' onClose={ wire('templateWarning.toggle') }>
                             <VGroup modifiers='margin-s'>
-                                <Type modifiers='multiline'>New layers can be added only to the deck template. To create a layer that is shown only for this card, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> button.</Type>
+                                <Type modifiers='multiline'>New layers can be added only to the key component. To create a layer that is shown only for this component, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> button. To replace an image, choose your image layer and click Browse.</Type>
 
                                 <HGroup modifiers='grow justify-end margin-s'>
                                     <button onClick={ wire('templateWarning.toggle') }>

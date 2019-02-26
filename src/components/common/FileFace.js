@@ -14,7 +14,7 @@ let onDelete = (it) => r.pipe(
         ]),
     deleteText = (it) =>
         !it.template
-            ? 'Deleting this component will delete the whole deck. Are you sure you want to continue?'
+            ? 'Deleting this component will delete the whole component set. Are you sure you want to continue?'
             : 'Are you sure you want to delete this component? This action can not be undone.',
     value = r.prop('id'),
     params = (it) => ({

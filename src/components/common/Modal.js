@@ -5,7 +5,9 @@ require('./modal.styl')
 module.exports = ({ children, heading, isOpen, onClose }) =>
     isOpen
         ? ReactDOM.createPortal(
-            <div className='modal' onClick={ (e) => {
+            <div
+                className='modal'
+                onClick={ (e) => {
                     if (e.target === e.currentTarget) {
                         onClose()
                     }
