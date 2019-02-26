@@ -5,6 +5,7 @@ let gameModel = require('model/gameModel.js'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),
+    persistentSignal = require('model/persistentSignal.js'),
 
     Button = require('components/common/Button.js')
 
@@ -15,11 +16,13 @@ let CANVAS_WIDTH = A4_PIXELS[0],
 
 module.exports = switchboard.component(
     ({ signal, slot }) => {
+        let pSignal = persistentSignal(signal)
+
         return ({
             elements: gameModel.elements.populateTemplate(gameModel.elements.signal),
-            pageMargin: signal(20, slot('margin.set')),
-            showCutlines: signal(true, slot('showCutlines.set')),
-            showCropMarks: signal(true, slot('showCropMarks.set')),
+            pageMargin: pSignal('pageMargin', 20, slot('margin.set')),
+            showCutlines: pSignal('showCutlines', true, slot('showCutlines.set')),
+            showCropMarks: pSignal('showCropMarks', true, slot('showCropMarks.set')),
             selectorShown: signal(false, slot('selector.toggle'), r.not),
             decks:
                 gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template))),
@@ -40,7 +43,7 @@ module.exports = switchboard.component(
                 kefir.combine(
                     [slot('selection.componentSet.toggle')],
                     [gameModel.elements.signal]
-                ).log(),
+                ),
                 (it, [[id, status], elements]) =>
                     status
                         ? r.uniq(it.concat(elements.filter((it) => it.id === id || it.template === id).map(r.prop('id'))))
