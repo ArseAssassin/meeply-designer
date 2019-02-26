@@ -25,6 +25,7 @@ let icons = {
     info: require('./../../../node_modules/feather-icons/dist/icons/info.svg'),
     upload: require('./../../../node_modules/feather-icons/dist/icons/upload-cloud.svg'),
     rename: require('./../../../node_modules/feather-icons/dist/icons/edit-3.svg'),
+    edit: require('./../../../node_modules/feather-icons/dist/icons/edit.svg'),
     zoom: require('./../../../node_modules/feather-icons/dist/icons/search.svg'),
     more: require('./../../../node_modules/feather-icons/dist/icons/more-horizontal.svg'),
     home: require('./../../../node_modules/feather-icons/dist/icons/home.svg'),

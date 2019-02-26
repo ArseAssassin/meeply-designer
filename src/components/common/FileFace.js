@@ -24,32 +24,38 @@ let onDelete = (it) => r.pipe(
         value: value(it),
         element: it,
         name: it.name
-    })
+    }),
+    countAdjuster = (element) =>
+        <HGroup modifiers='margin-s align-center'>
+            <Icon name='copy' modifiers='m' />
+            <input
+                onClick={ cancel }
+                onDoubleClick={ cancel }
+                step='1'
+                min='0'
+                type='number'
+                onChange={ r.pipe(
+                    r.path(words('target value')),
+                    parseInt,
+                    r.pair(element.id),
+                    switchboard.slot.toFn(gameModel.elements.setCount)
+                ) }
+                value={ element.count } />
+        </HGroup>
 
-module.exports = ({ element, onDoubleClick=Boolean, ...rest }) =>
+module.exports = ({ element, onDoubleClick=Boolean, adjuster=countAdjuster, ...rest }) =>
     <FileExplorer.File
         { ...rest }
         name={ element.name }
         onDoubleClick={ r.pipe(r.always(element.id), onDoubleClick) }>
         <div className='design-view__file'>
-            <ElementRenderer element={ element } viewBox={ `0 0 ${ element.width } ${ element.height }`} showDocument />
+            <ElementRenderer
+                element={ element }
+                viewBox={ `0 0 ${ element.width } ${ element.height }`}
+                showDocument />
+
             <div className='design-view__count'>
-                <HGroup modifiers='margin-s align-center'>
-                    <Icon name='copy' modifiers='m' />
-                    <input
-                        onClick={ cancel }
-                        onDoubleClick={ cancel }
-                        step='1'
-                        min='0'
-                        type='number'
-                        onChange={ r.pipe(
-                            r.path(words('target value')),
-                            parseInt,
-                            r.pair(element.id),
-                            switchboard.slot.toFn(gameModel.elements.setCount)
-                        ) }
-                        value={ element.count } />
-                </HGroup>
+                { adjuster(element)}
             </div>
 
             { !element.template && <div className='design-view__file-type'>

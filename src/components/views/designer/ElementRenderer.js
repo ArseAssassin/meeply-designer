@@ -206,7 +206,7 @@ module.exports = switchboard.component(
             updateBy:
                 propsProperty.map(r.prop('realTime')).skipDuplicates()
                 .flatMapLatest((it) =>
-                    it ? propsProperty
+                    it ? propsProperty.skipDuplicates(r.equals)
                        : propsProperty.skipDuplicates(r.equals).debounce(700)
                 )
         }

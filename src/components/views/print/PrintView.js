@@ -2,6 +2,9 @@ let gameModel = require('model/gameModel.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     { DEFAULT_PPI, A4_PIXELS } = require('constants/units.js'),
     Input = require('components/common/Input.js'),
+    Modal = require('components/common/Modal.js'),
+    FileExplorer = require('components/common/FileExplorer.js'),
+    FileFace = require('components/common/FileFace.js'),
 
     Button = require('components/common/Button.js')
 
@@ -16,12 +19,43 @@ module.exports = switchboard.component(
             elements: gameModel.elements.populateTemplate(gameModel.elements.signal),
             pageMargin: signal(20, slot('margin.set')),
             showCutlines: signal(true, slot('showCutlines.set')),
-            showCropMarks: signal(true, slot('showCropMarks.set'))
+            showCropMarks: signal(true, slot('showCropMarks.set')),
+            selectorShown: signal(false, slot('selector.toggle'), r.not),
+            decks:
+                gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template))),
+            counts:
+                gameModel.elements.counts,
+
+            selectedComponents: signal(
+                [],
+
+                gameModel.elements.signal.map(r.map(r.prop('id'))),
+
+                slot('selection.toggle'),
+                (it, id) =>
+                    !r.contains(id, it)
+                        ? it.concat(id)
+                        : it.filter((it) => it !== id),
+
+                kefir.combine(
+                    [slot('selection.componentSet.toggle')],
+                    [gameModel.elements.signal]
+                ).log(),
+                (it, [[id, status], elements]) =>
+                    status
+                        ? r.uniq(it.concat(elements.filter((it) => it.id === id || it.template === id).map(r.prop('id'))))
+                        : it.filter((it) => {
+                            let component = r.find(r.propEq('id', it), elements)
+
+                            return component.template !== id && component.id !== id
+                        })
+            )
         })
     },
 
-    ({ wiredState: { elements, pageMargin, showCutlines, showCropMarks }, wire }) => {
+    ({ wiredState: { elements, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
         let pages = threadLast(elements)(
+            r.filter((it) => r.contains(it.id, selectedComponents)),
             r.map((it) => r.repeat(it, it.count)),
             r.unnest,
             r.groupBy((it) => it.width + '-' + it.height),
@@ -56,11 +90,13 @@ module.exports = switchboard.component(
 
                     <Button modifiers='blue l' onClick={ () => window.print() }>Print game</Button>
 
-                    <HGroup modifiers='justify-center'>
-                        <Input.Number
-                            onChange={ r.pipe(r.path(words('target value')), parseInt, wire('margin.set')) }
-                            label='Page margin'
-                            value={ pageMargin } />
+                    <HGroup modifiers='justify-center align-center'>
+                        <HGroup modifiers='margin-s'>
+                            <span>Page margin</span>
+                            <Input.Number
+                                onChange={ r.pipe(r.path(words('target value')), parseInt, wire('margin.set')) }
+                                value={ pageMargin } />
+                        </HGroup>
 
                         <Input.Checkbox
                             checked={ showCropMarks }
@@ -71,14 +107,81 @@ module.exports = switchboard.component(
                             checked={ showCutlines }
                             onChange={ r.pipe(r.path(words('target checked')), wire('showCutlines.set')) }
                             label='Show cutlines' />
+
+                        <HGroup modifiers='margin-s align-center'>
+                            Printing
+                            <Button modifiers='aqua s' onClick={ wire('selector.toggle') }>
+                                <HGroup modifiers='align-center margin-s'>
+                                    { selectedComponents.length === elements.length
+                                        ? 'all components'
+                                        : `${ selectedComponents.length } components` }
+                                    <Icon name='edit' modifiers='s' />
+                                </HGroup>
+                            </Button>
+                        </HGroup>
                     </HGroup>
                 </VGroup>
             </div>
 
+            <Modal
+                isOpen={ selectorShown }
+                heading='Select components to print'
+                onClose={ wire('selector.toggle') }>
+                <div className='print__selector'>
+                    <FileExplorer
+                        rootName={ <Icon name='home' modifiers='s' /> }>
+
+                        { decks.map(({ name, id, ...deck }) =>
+                            <FileExplorer.Folder
+                                face={
+                                    <div className='design-view__file'>
+                                        <ElementRenderer
+                                            element={ deck }
+                                            viewBox={ `0 0 ${ deck.width } ${ deck.height }`}
+                                            showDocument />
+
+                                        <div className='design-view__count'>
+                                            <Input.Checkbox
+                                                onChange={ r.pipe(r.path(words('target checked')), r.pair(id), wire('selection.componentSet.toggle')) }
+                                                checked={ r.all(
+                                                    (it) => r.contains(it.id, selectedComponents),
+                                                    elements.filter((it) => it.template === id || it.id === id)
+                                                ) }
+                                                modifiers='l' />
+                                        </div>
+                                    </div>
+                                }
+                                label={ <HGroup modifiers='margin-s'>
+                                    {name}
+                                    <HGroup modifiers='margin-xs align-center'>
+                                        <Icon name='count' modifiers='s' />
+                                        { counts[id] }
+                                    </HGroup>
+                                </HGroup> }
+                                { ...FileFace.params({ name, id, ...deck }) }
+                                key={ id }>
+                                { elements.filter((it) => r.contains(id, [it.template, it.id])).map((it, idx) =>
+                                    <FileFace
+                                        key={ it.id }
+                                        adjuster={ () =>
+                                            <Input.Checkbox
+                                                checked={ r.contains(it.id, selectedComponents) }
+                                                onChange={ r.pipe(r.always(it.id), wire('selection.toggle')) }
+                                                modifiers='l' />
+                                        }
+                                        { ...(FileFace.params(it)) }
+                                        element={ it } />
+                                ) }
+                            </FileExplorer.Folder>
+                        ) }
+                    </FileExplorer>
+                </div>
+            </Modal>
+
             <div id='print'>
                 { threadLast(pages)(
                     r.addIndex(r.map)(([size, pages], idx) => pages.map((page) =>
-                        <svg viewBox={`0 0 ${A4_PIXELS.join(' ')}`} width={ A4_PIXELS[0] } height={ A4_PIXELS[1] } key={ size + idx } className='print__page'>
+                        <svg viewBox={`0 0 ${A4_PIXELS.join(' ')}`} width={ A4_PIXELS[0] } height={ A4_PIXELS[1] } key={ size + Math.random() } className='print__page'>
                             {page.map((it) => {
                                 let left = it.x,
                                     lefter = Math.max(0, ...page.map((it) => it.x + it.width).filter((it) => it < left)),
