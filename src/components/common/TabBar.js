@@ -5,7 +5,7 @@ module.exports =
         <div className='tab-bar'>
             <div className='tab-bar__tabs'>
                 { React.Children.toArray(children).map((it, idx) =>
-                    <button className={ modifiersToClass('tab-bar__tab', selected === idx && 'selected') }
+                    <a className={ modifiersToClass('tab-bar__tab', selected === idx && 'selected') }
                          key={ idx }
                          onAuxClick={ (e) => !it.props.closingDisabled && onClose(idx) }
                          onClick={ (e) => onSelect(idx) }>
@@ -19,7 +19,7 @@ module.exports =
                                     <Icon name='x' modifiers='s' />
                                 </button> }
                         </HGroup>
-                    </button>
+                    </a>
                 ) }
             </div>
 
