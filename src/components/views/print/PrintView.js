@@ -6,6 +6,7 @@ let gameModel = require('model/gameModel.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),
     persistentSignal = require('model/persistentSignal.js'),
+    saveTabState = require('wireState/saveTabState.js'),
 
     Button = require('components/common/Button.js')
 
@@ -15,7 +16,7 @@ let CANVAS_WIDTH = A4_PIXELS[0],
     CANVAS_HEIGHT = A4_PIXELS[1]
 
 module.exports = switchboard.component(
-    ({ signal, slot }) => {
+    saveTabState(({ savedSignal, signal, slot }) => {
         let pSignal = persistentSignal(signal)
 
         return ({
@@ -29,7 +30,7 @@ module.exports = switchboard.component(
             counts:
                 gameModel.elements.counts,
 
-            selectedComponents: signal(
+            selectedComponents: savedSignal('selectedPrintComponents')(
                 [],
 
                 gameModel.elements.signal.map(r.map(r.prop('id'))),
@@ -54,7 +55,7 @@ module.exports = switchboard.component(
                         })
             )
         })
-    },
+    }),
 
     ({ wiredState: { elements, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
         let pages = threadLast(elements)(
