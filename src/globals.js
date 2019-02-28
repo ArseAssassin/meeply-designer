@@ -1,14 +1,15 @@
-let ramda = require('ramda')
+let ramda = require('ramda'),
+    { memoizedFunction } = require('utils/functionUtils.js')
 
 global.React = require('react')
 global.r = ramda
 global.log = r.tap(console.log)
 
-global.words = (it) => it.split(' ')
+global.words = memoizedFunction((it) => it.split(' '))
 
 global.threadLast = (it) => (...rest) => r.pipe(...rest)(it)
 
-global.modifiersToClass = (className, ...modifiers) =>
+global.modifiersToClass = memoizedFunction((className, ...modifiers) =>
     threadLast(modifiers)(
         r.map((it) =>
             typeof it !== 'object'
@@ -26,7 +27,7 @@ global.modifiersToClass = (className, ...modifiers) =>
         r.map((it) => className + '--' + it),
         r.concat([className]),
         r.join(' ')
-    )
+    ))
 
 let Group = ({ children, modifiers='', ref }) =>
     <div className={modifiersToClass('group', modifiers)} ref={ ref }>

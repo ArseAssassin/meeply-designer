@@ -74,7 +74,14 @@ module.exports = switchboard.model(({ signal, slot }) => {
 
                 slot('userImages.delete'),
                 (it, id) => r.dissoc(id, it)
+            ),
+        allImages =
+            kefir.combine(
+                [userImages, library]
             )
+            .toProperty()
+            .map(r.apply(r.merge))
+            .skipDuplicates(r.equals)
 
     return {
         libraryImages: {
@@ -91,10 +98,10 @@ module.exports = switchboard.model(({ signal, slot }) => {
             getById: (it) =>
                 kefir.combine(
                     [it],
-                    [userImages, library]
+                    [allImages]
                 )
                 .toProperty()
-                .map(([id, userImages, library]) => ({ ...userImages, ...library })[id])
+                .map(([id, allImages]) => allImages[id])
         }
     }
 })

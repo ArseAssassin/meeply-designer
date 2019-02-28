@@ -1,5 +1,6 @@
 let WrappingText = require('components/common/WrappingText.js'),
-    resourcesModel = require('model/resourcesModel.js')
+    resourcesModel = require('model/resourcesModel.js'),
+    { memoizedFunction } = require('utils/functionUtils.js')
 
 
 const TEXT_ALIGN = {
@@ -167,14 +168,19 @@ let renderers = {
             r.filter((it) => !it.hidden),
             r.map((it) =>
                 <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
-                    { React.cloneElement(
-                        renderers[it.type || ''](it),
-                        onLayerInteract && !it.isLocked && {
-                            onMouseDown:
-                                r.pipe(cancel, r.always({ layer: it, type: 'mouseDown' }), onLayerInteract),
-                            onMouseUp:
-                                r.pipe(cancel, r.always({ layer: it, type: 'mouseUp' }), onLayerInteract),
-                        }
+                    { threadLast(renderers[it.type || ''](it))(
+                        (it) =>
+                            interactive && onLayerInteract && !it.isLocked
+                              ? React.cloneElement(
+                                    it,
+                                    {
+                                        onMouseDown:
+                                            r.pipe(cancel, r.always({ layer: it, type: 'mouseDown' }), onLayerInteract),
+                                        onMouseUp:
+                                            r.pipe(cancel, r.always({ layer: it, type: 'mouseUp' }), onLayerInteract)
+                                    }
+                                )
+                              : it
                     ) }
 
                     { interactive && <SizeIndicator
@@ -185,28 +191,35 @@ let renderers = {
                         layer={ it } /> }
                 </g>
             )
-        )
+        ),
+    memoizedRenderElement = memoizedFunction(renderElement)
 
 module.exports = switchboard.component(
     ({ slot, propsProperty }) => {
-        kefir.combine(
-            [slot('click.end')], [
-            kefir.merge([
-                slot('click.start').map(r.T),
-                slot('click.start').delay(200).map(r.F),
-            ]),
-            propsProperty.map(r.prop('onClick'))
-        ])
-        .map(r.tail)
-        .filter(r.apply(r.and))
-        .map(r.last)
+        propsProperty.map(r.prop('interactive'))
+        .skipDuplicates()
+        .flatMapLatest((it) =>
+            it
+              ? kefir.combine(
+                    [slot('click.end')], [
+                    kefir.merge([
+                        slot('click.start').map(r.T),
+                        slot('click.start').delay(200).map(r.F),
+                    ]),
+                    propsProperty.map(r.prop('onClick'))
+                ])
+                .map(r.tail)
+                .filter(r.apply(r.and))
+                .map(r.last)
+              : kefir.never()
+        )
         .onValue((onClick) => onClick())
 
         return {
             updateBy:
                 propsProperty.map(r.prop('realTime')).skipDuplicates()
                 .flatMapLatest((it) =>
-                    it ? propsProperty.skipDuplicates(r.equals)
+                    it ? propsProperty.skipDuplicates(r.equals).throttle(1000 / 60)
                        : propsProperty.skipDuplicates(r.equals).debounce(700)
                 )
         }
@@ -231,6 +244,10 @@ module.exports = switchboard.component(
                     height={ element.height }
                     x='0'
                     y='0' /> }
-            { viewBox && renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive) }
+            { viewBox && (
+                interactive
+                  ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive)
+                  : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive)
+            ) }
         </svg>
 )
