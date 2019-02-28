@@ -33,17 +33,19 @@ let getTransform = ({ rotation, mirror, x, y, width, height }) => [
 let renderers = {
         'image': (it) =>
             <Image layer={ it } />,
-        'text': (it) =>
+        'text': (it, loadedFonts) =>
             <WrappingText
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
                 y={ it.y }
                 transform={ getTransform(it) }
                 isInverted={ (it.rotation || 0) % 180 !== 0 }
                 helperClass=''
+                loadedFonts={ loadedFonts }
                 width={ it.width }
                 height={ it.height }
                 isBold={ it.isBold }
                 fontStyle={ it.fontStyle }
+                fontFamily={ it.fontFamily }
                 style={{ fontSize: it.fontSize + 'pt', fill: it.color }}
                 alignmentBaseline='hanging'
                 textAnchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
@@ -162,13 +164,13 @@ let renderers = {
                 { points.map((it, idx) => it(layer.x, layer.y, layer.width, layer.height, wire('resize.start'))) }
             </g>
     ),
-    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel, interactive) =>
+    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts) =>
         threadLast(it)(
             r.prop('body'),
             r.filter((it) => !it.hidden),
             r.map((it) =>
                 <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
-                    { threadLast(renderers[it.type || ''](it))(
+                    { threadLast(renderers[it.type || ''](it, loadedFonts))(
                         (it) =>
                             interactive && onLayerInteract && !it.isLocked
                               ? React.cloneElement(
@@ -221,10 +223,12 @@ module.exports = switchboard.component(
                 .flatMapLatest((it) =>
                     it ? propsProperty.skipDuplicates(r.equals).throttle(1000 / 60)
                        : propsProperty.skipDuplicates(r.equals).debounce(700)
-                )
+                ),
+            loadedFonts:
+                resourcesModel.loadedFonts.signal
         }
     },
-    ({ wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
+    ({ wiredState: { loadedFonts }, wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width={ useExactSize ? element.width : '100%'}
@@ -246,8 +250,8 @@ module.exports = switchboard.component(
                     y='0' /> }
             { viewBox && (
                 interactive
-                  ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive)
-                  : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive)
+                  ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
+                  : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
             ) }
         </svg>
 )

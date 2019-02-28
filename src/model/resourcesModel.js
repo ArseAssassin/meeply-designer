@@ -50,13 +50,14 @@ module.exports = switchboard.model(({ signal, slot }) => {
                 {},
 
                 slot('userImages.upload'),
-                (it, { name, body, id }) => {
+                (it, { name, body, id, type='image' }) => {
                     return ({
                         ...it,
                         [id]: {
                             name,
                             body,
-                            id
+                            id,
+                            type
                         }
                     })
                 },
@@ -102,6 +103,21 @@ module.exports = switchboard.model(({ signal, slot }) => {
                 )
                 .toProperty()
                 .map(([id, allImages]) => allImages[id])
+        },
+        fonts: {
+            signal: userImages.map(r.pipe(
+                r.toPairs,
+                r.filter(r.pipe(r.last, r.propEq('type', 'font'))),
+                r.fromPairs
+            ))
+        },
+        loadedFonts: {
+            signal: signal(
+                [],
+
+                slot('fonts.loaded.set').skipDuplicates(r.equals).debounce(0)
+            ),
+            set: slot('fonts.loaded.set')
         }
     }
 })

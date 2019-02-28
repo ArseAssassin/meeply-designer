@@ -40,13 +40,18 @@ module.exports = switchboard.component(
         ])
         .onValue(([fn, focusFn]) => fn(focusFn))
 
-        kefir.combine(
-            [slot('upload')
-            .flatMapLatest(() => fileUtils.load('image/*'))
-            .map((it) => ({ ...it, id: uuid() }))
-            .to(resourcesModel.userImages.upload)
-            .map(r.prop('id'))],
-            [save]
+        propsProperty.map(r.prop('type'))
+        .skipDuplicates()
+        .flatMapLatest((type) =>
+            kefir.combine(
+               [slot('upload')
+                .map(r.last)
+                .flatMapLatest(() => fileUtils.load(type === 'image' ? 'image/*' : '.woff2,.ttf,.otf'))
+                .map((it) => ({ ...it, type, id: uuid() }))
+                .to(resourcesModel.userImages.upload)
+                .map(r.prop('id'))],
+                [save]
+            )
         )
         .onValue(([id, save]) => save(id))
 
@@ -59,12 +64,12 @@ module.exports = switchboard.component(
                 slot('focus'), r.T,
 
                 propsProperty
-                .map(r.pick(words('value id')))
+                .map(r.pick(words('value id autoOpen')))
                 .skipDuplicates(r.equals)
-                .filter(({ value }) => !value),
+                .filter(({ value, autoOpen }) => autoOpen && !value),
                 r.T
             ),
-            imageName:
+            resourceName:
                 propsProperty.map(r.prop('value'))
                 .thru(resourcesModel.images.getById)
                 .map(r.propOr('', 'name')),
@@ -93,11 +98,11 @@ module.exports = switchboard.component(
             chosenImage
         })
     },
-    ({ wiredState: { save, chosenImage, imageName, usedImages, userImages, libraryImages, isOpen }, wire, value, onChange }) => {
+    ({ wiredState: { save, chosenImage, resourceName, usedImages, userImages, libraryImages, isOpen }, wire, value, onChange, type }) => {
         return <VGroup modifiers='margin-s'>
             <div onClick={ wire('toggle') }>
                 <VGroup modifiers='margin-s'>
-                    <Type modifiers='s'>{ imageName }</Type>
+                    <Type modifiers='s'>{ resourceName }</Type>
                     <button>Browse...</button>
                 </VGroup>
             </div>
@@ -171,7 +176,7 @@ module.exports = switchboard.component(
 
                                 <FileExplorer.File
                                     value='upload'
-                                    name='Upload image'
+                                    name={ type === 'image' ? 'Upload image' : 'Upload font'}
                                     onDoubleClick={ wire('upload') }>
                                     <Icon name='upload' />
                                 </FileExplorer.File>

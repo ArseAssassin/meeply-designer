@@ -40,7 +40,7 @@ let getLayer = (layer, layers) =>
                         defaultValue: '',
                         validator: required()
                     }
-                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize color')))).map((it) => ({ ...it, body: it.body || undefined }))
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color')))).map((it) => ({ ...it, body: it.body || undefined }))
                 )(rest),
                 ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
                 imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
@@ -103,6 +103,7 @@ let getLayer = (layer, layers) =>
                     { layer.type === 'image' &&
                         capture(<FormField.Basic name='body'>
                             <FileBrowser
+                                autoOpen
                                 onImageFocus={ wire('imageFocus.set') }
                                 id={ layer.id }
                                 type='image' />
@@ -152,6 +153,15 @@ let getLayer = (layer, layers) =>
 
                     { layer.type === 'text' &&
                         <VGroup>
+                            <HGroup modifiers='align-center'>
+                                T
+                                {capture(<FormField.Basic name='fontFamily'>
+                                    <FileBrowser
+                                        id={ layer.id }
+                                        type='font' />
+                                </FormField.Basic>)}
+                            </HGroup>
+
                             <HGroup modifiers='align-center'>
                                 <HGroup modifiers='margin-s align-center'>
                                     Aa

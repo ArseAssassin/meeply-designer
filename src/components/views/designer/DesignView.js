@@ -172,6 +172,9 @@ module.exports = switchboard.component(
         .map(r.prop('id'))
         .to(slot('elements.open'))
 
+        slot('fonts.loaded')
+        .to(resourcesModel.loadedFonts.set)
+
         return ({
             selectedTab:
                 kefir.combine([
@@ -215,11 +218,20 @@ module.exports = switchboard.component(
 
                 slot('new.toggle'), r.not
             ),
-            gameName: gameModel.name.signal
+            gameName: gameModel.name.signal,
+            fonts: resourcesModel.fonts.signal
         })
     },
-    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen }, wire }) =>
+    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts }, wire }) =>
         <div className='design-view'>
+            <style ref={ r.pipe(r.always(r.keys(fonts)), wire('fonts.loaded')) }>
+                { r.values(fonts).map((it) => `
+                    @font-face {
+                        font-family: '${it.id}';
+                        src: url(${it.body});
+                    }
+                `) }
+            </style>
             <Modal isOpen={ isNewConfirmationOpen } onClose={ wire('new.toggle') } heading='Create new project'>
                 <VGroup>
                     <Type modifiers='align-center'>
