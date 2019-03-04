@@ -1,6 +1,6 @@
 let gameModel = require('model/gameModel.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
-    { DEFAULT_PPI, A4_PIXELS } = require('constants/units.js'),
+    { DEFAULT_PPI, PAPER_SIZES } = require('constants/units.js'),
     Input = require('components/common/Input.js'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
@@ -12,9 +12,6 @@ let gameModel = require('model/gameModel.js'),
 
 require('./print-view.styl')
 
-let CANVAS_WIDTH = A4_PIXELS[0],
-    CANVAS_HEIGHT = A4_PIXELS[1]
-
 module.exports = switchboard.component(
     saveTabState(({ savedSignal, signal, slot }) => {
         let pSignal = persistentSignal(signal)
@@ -25,6 +22,7 @@ module.exports = switchboard.component(
             showCutlines: pSignal('showCutlines', true, slot('showCutlines.set')),
             showCropMarks: pSignal('showCropMarks', true, slot('showCropMarks.set')),
             selectorShown: signal(false, slot('selector.toggle'), r.not),
+            paperSize: pSignal('paperSize', 'A4', slot('paperSize.set')),
             decks:
                 gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template))),
             counts:
@@ -57,35 +55,36 @@ module.exports = switchboard.component(
         })
     }),
 
-    ({ wiredState: { elements, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
-        let pages = threadLast(elements)(
-            r.filter((it) => r.contains(it.id, selectedComponents)),
-            r.map((it) => r.repeat(it, it.count)),
-            r.unnest,
-            r.groupBy((it) => it.width + '-' + it.height),
-            r.mapObjIndexed((it) => {
-                let { width, height } = it[0],
-                    actualCanvasWidth = CANVAS_WIDTH - pageMargin * 2,
-                    actualCanvasHeight = CANVAS_HEIGHT - pageMargin * 2,
-                    hElements = Math.floor(actualCanvasWidth / width),
-                    vElements = Math.floor(actualCanvasHeight / height),
-                    allowedElements = hElements * vElements,
-                    elementMarginWidth = actualCanvasWidth / hElements + (actualCanvasWidth / hElements - width) / hElements,
-                    elementMarginHeight = actualCanvasHeight / vElements + (actualCanvasHeight / vElements - height) / vElements
+    ({ wiredState: { elements, paperSize, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
+        let [canvasWidth, canvasHeight] = PAPER_SIZES[paperSize].map((it) => it * DEFAULT_PPI),
+            pages = threadLast(elements)(
+                r.filter((it) => r.contains(it.id, selectedComponents)),
+                r.map((it) => r.repeat(it, it.count)),
+                r.unnest,
+                r.groupBy((it) => it.width + '-' + it.height),
+                r.mapObjIndexed((it) => {
+                    let { width, height } = it[0],
+                        actualCanvasWidth = canvasWidth - pageMargin * 2,
+                        actualCanvasHeight = canvasHeight - pageMargin * 2,
+                        hElements = Math.floor(actualCanvasWidth / width),
+                        vElements = Math.floor(actualCanvasHeight / height),
+                        allowedElements = hElements * vElements,
+                        elementMarginWidth = actualCanvasWidth / hElements + (actualCanvasWidth / hElements - width) / hElements,
+                        elementMarginHeight = actualCanvasHeight / vElements + (actualCanvasHeight / vElements - height) / vElements
 
-                return threadLast(it)(
-                    r.splitEvery(allowedElements),
-                    r.map(r.addIndex(r.map)((it, idx) => ({
-                        ...it,
-                        x: pageMargin + (idx % hElements) * elementMarginWidth,
-                        y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight
-                    })))
-                )
-            }),
-            r.toPairs,
-            r.sortBy(r.head),
-            r.reverse
-        )
+                    return threadLast(it)(
+                        r.splitEvery(allowedElements),
+                        r.map(r.addIndex(r.map)((it, idx) => ({
+                            ...it,
+                            x: pageMargin + (idx % hElements) * elementMarginWidth,
+                            y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight
+                        })))
+                    )
+                }),
+                r.toPairs,
+                r.sortBy(r.head),
+                r.reverse
+            )
 
         return <div className='print'>
             <div className='print__tools'>
@@ -95,6 +94,11 @@ module.exports = switchboard.component(
                     <Button modifiers='blue l' onClick={ () => window.print() }>Print game</Button>
 
                     <HGroup modifiers='justify-center align-center'>
+                        <Input.Select label='Paper size' value={ paperSize } onChange={ r.pipe(r.path(words('target value')), wire('paperSize.set')) }>
+                            <option value='A4'>A4</option>
+                            <option value='ANSI_LETTER'>Letter (8.5" x 11")</option>
+                        </Input.Select>
+
                         <HGroup modifiers='margin-s'>
                             <span>Page margin</span>
                             <Input.Number
@@ -185,16 +189,16 @@ module.exports = switchboard.component(
             <div id='print'>
                 { threadLast(pages)(
                     r.addIndex(r.map)(([size, pages], idx) => pages.map((page) =>
-                        <svg viewBox={`0 0 ${A4_PIXELS.join(' ')}`} width={ A4_PIXELS[0] } height={ A4_PIXELS[1] } key={ size + Math.random() } className='print__page'>
+                        <svg viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} width={ canvasWidth } height={ canvasHeight } key={ size + Math.random() } className='print__page'>
                             {page.map((it) => {
                                 let left = it.x,
                                     lefter = Math.max(0, ...page.map((it) => it.x + it.width).filter((it) => it < left)),
                                     top = it.y,
                                     topper = Math.max(0, ...page.map((it) => it.y + it.height).filter((it) => it < top)),
                                     right = it.x + it.width,
-                                    righter = Math.min(CANVAS_WIDTH, ...page.map((it) => it.x).filter((it) => it > right)),
+                                    righter = Math.min(canvasWidth, ...page.map((it) => it.x).filter((it) => it > right)),
                                     bottom = it.y + it.height,
-                                    bottomer = Math.min(CANVAS_HEIGHT, ...page.map((it) => it.y).filter((it) => it > bottom))
+                                    bottomer = Math.min(canvasHeight, ...page.map((it) => it.y).filter((it) => it > bottom))
 
                                 return <g>
                                     {showCropMarks && [[left, top, lefter, top], [left, top, left, topper], [right, top, right, topper], [right, top, righter, top], [left, bottom, lefter, bottom], [left, bottom, left, bottomer], [right, bottom, righter, bottom], [right, bottom, right, bottomer]].map((it) =>
