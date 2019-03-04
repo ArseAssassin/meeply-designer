@@ -19,17 +19,17 @@
 
 .design-view__file
     position relative
+    max-width 200px
 
+    .element
+        display block
 
-.design-view__count
+.design-view__meta
     padding-asym--xs()
 
-    position absolute
-    left 0px
-    bottom 0px
-
     background-color $grey
-    border-radius 2px
+    border 1px solid darken($grey, 15%)
+    border-top 0
 
     input
         background-color transparent
@@ -41,11 +41,4 @@
 
 .design-view__file-type
     padding-asym--xs()
-
-    position absolute
-    right 0px
-    bottom 0px
-
-    background-color $grey
-    border-radius 2px
 

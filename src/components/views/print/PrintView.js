@@ -148,7 +148,7 @@ module.exports = switchboard.component(
                                             viewBox={ `0 0 ${ deck.width } ${ deck.height }`}
                                             showDocument />
 
-                                        <div className='design-view__count'>
+                                        <div className='design-view__meta'>
                                             <Input.Checkbox
                                                 onChange={ r.pipe(r.path(words('target checked')), r.pair(id), wire('selection.componentSet.toggle')) }
                                                 checked={ r.all(
