@@ -1,6 +1,7 @@
 let ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
-    gameModel = require('model/gameModel.js')
+    gameModel = require('model/gameModel.js'),
+    Input = require('components/common/Input.js')
 
 
 let onDelete = (it) => r.pipe(
@@ -26,9 +27,10 @@ let onDelete = (it) => r.pipe(
         name: it.name
     }),
     countAdjuster = (element) =>
-        <HGroup modifiers='margin-s align-center'>
+        <HGroup modifiers='margin-s align-center' data-group-modifiers='grow'>
             <Icon name='copy' modifiers='m' />
-            <input
+            <Input.Number
+                modifiers='grow'
                 onClick={ cancel }
                 onDoubleClick={ cancel }
                 step='1'
@@ -54,13 +56,15 @@ module.exports = ({ element, onDoubleClick=Boolean, adjuster=countAdjuster, ...r
                 viewBox={ `0 0 ${ element.width } ${ element.height }`}
                 showDocument />
 
-            <div className='design-view__count'>
-                { adjuster(element)}
+            <div className='design-view__meta'>
+                <HGroup modifiers='grow margin-s justify-space-between'>
+                    { adjuster(element) }
+
+                    { !element.template && <Icon name='key' modifiers='m' /> }
+                </HGroup>
             </div>
 
-            { !element.template && <div className='design-view__file-type'>
-                <Icon name='key' modifiers='m' />
-            </div> }
+
         </div>
     </FileExplorer.File>
 

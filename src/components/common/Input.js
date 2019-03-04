@@ -22,5 +22,11 @@ module.exports = {
             { label && <span className='input__label'>{ label }</span> }
         </HGroup></label>,
     Slider: ({ modifiers='', ...rest }) =>
-        <input type='range' className={ modifiersToClass('input-range',  modifiers) } />
+        <input type='range' className={ modifiersToClass('input-range',  modifiers) } />,
+
+    Select: ({ modifiers='', ...rest }) =>
+        <label><VGroup modifiers='margin-s'>
+            <span>Paper size</span>
+            <select {...rest} />
+        </VGroup></label>
 }
