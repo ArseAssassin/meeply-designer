@@ -26,6 +26,7 @@ module.exports = switchboard.model(({ signal, slot }) => {
                     body: value,
                     license:
                         <Type modifiers='xs'><a rel='noopener noreferrer' href='http://afractalthought.com/fractal-symbols/board-game-library/' target='_blank'>Fractal Symbols</a> by Felix Thålin. Licensed under <a rel='noopener noreferrer' href='https://creativecommons.org/licenses/by/4.0/' target='_blank'>Creative Commons Attrubution 4.0 International</a> license.</Type>,
+                    path: 'Fractal Symbols',
                     source: 'Fractal Icons'
                 }])),
                 r.concat(threadLast(gameIconsFiles)(
@@ -34,11 +35,20 @@ module.exports = switchboard.model(({ signal, slot }) => {
                         name: r.last(key.split('/')),
                         id: key,
                         body: value,
+                        path: `Game Icons/${r.last(key.split('/'))[0].toUpperCase()}`,
                         license:
                             <Type modifiers='xs'><a rel='noopener noreferrer' href='https://game-icons.net/' target='_blank'>Game Icons</a> by <a href='http://lorcblog.blogspot.com/'>Lorc</a>, <a href='http://delapouite.com/'>Delapouite</a> & <a href='https://game-icons.net/about.html#authors'>contributors</a>. Licensed under <a rel='noopener noreferrer' href='http://creativecommons.org/licenses/by/3.0/' target='_blank'>Creative Commons Attribution 3.0 Unported</a> license.</Type>,
                         source: 'game-icons.net'
                     }]))
                 )),
+                r.concat([['', {
+                    name: 'Default',
+                    type: 'font',
+                    id: '',
+                    path: '',
+                    license: <div />,
+                    source: ''
+                }]]),
                 r.fromPairs,
                 (it) => kefir.constant(it)
             ),

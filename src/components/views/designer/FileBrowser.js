@@ -2,13 +2,55 @@ let uuid = require('uuid/v4'),
 
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
+    ResourcePreview = require('components/common/ResourcePreview.js'),
 
     resourcesModel = require('model/resourcesModel.js'),
+    { memoizedFunction } = require('utils/functionUtils.js'),
     gameModel = require('model/gameModel.js'),
     fileUtils = require('utils/fileUtils.js')
 
 require('./file-browser.styl')
 
+
+let renderLibrary =
+        (path, library, save) =>
+            threadLast(library)(
+                r.map(r.prop('path')),
+                r.map((it) => {
+                    let path = it.split('/')
+
+                    return path.map((_, idx) =>
+                        r.take(idx + 1, path).join('/')
+                    )
+                }),
+                r.unnest,
+                r.uniq,
+                r.map((it) => r.take(path.split('/').length + (path === '' ? 0 : 1), it.split('/')).join('/')),
+                r.uniq,
+                r.filter((it) => it.length > path.length && r.contains(path, it)),
+                r.map((folder) =>
+                    <FileExplorer.Folder
+                        key={ JSON.stringify(folder) }
+                        name={ r.drop(path.split('/').length - (path === '' ? 1 : 0), folder.split('/')).join('/') }
+                        value={ JSON.stringify(folder) }>
+                        { renderLibrary(folder, library, save) }
+                    </FileExplorer.Folder>
+                ),
+                r.concat(
+                    threadLast(library)(
+                        r.filter((it) => it.path === path),
+                        r.map((it) =>
+                            <FileExplorer.File
+                                value={ it.id }
+                                name={ it.name }
+                                key={ it.id }
+                                onDoubleClick={ () => save(it.id) }>
+                                <ResourcePreview modifiers='s' resource={ it } />
+                            </FileExplorer.File>
+                        )
+                    )
+                )
+            )
 
 module.exports = switchboard.component(
     ({ signal, slot, isAlive, propsProperty }) => {
@@ -32,7 +74,12 @@ module.exports = switchboard.component(
             focusFn = signal(
                 switchboard.slot.toFn(slot('focus'))
             )
-            .takeUntilBy(isAlive.filter(r.not).map(r.always(undefined)))
+            .takeUntilBy(isAlive.filter(r.not).map(r.always(undefined))),
+            type = propsProperty.map(r.prop('type')).skipDuplicates(),
+            filterByType = (it) =>
+                kefir.combine([it, type])
+                .toProperty()
+                .map(([it, type]) => it.filter((it) => type === 'font' ? it.type === 'font' : it.type !== 'font'))
 
         kefir.combine([
             propsProperty.map(r.prop('onImageFocus')).filter(Boolean).take(1),
@@ -73,7 +120,8 @@ module.exports = switchboard.component(
                 propsProperty.map(r.prop('value'))
                 .thru(resourcesModel.images.getById)
                 .map(r.propOr('', 'name')),
-            userImages: resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
+            userImages:
+                resourcesModel.userImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))).thru(filterByType),
             usedImages:
                 gameModel.elements.signal
                 .flatMapLatest((elements) => threadLast(elements)(
@@ -93,8 +141,9 @@ module.exports = switchboard.component(
                         it.map((it) => resourcesModel.images.getById(kefir.constant(it)))
                     )
                 ))
-                .toProperty(),
-            libraryImages: resourcesModel.libraryImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))),
+                .toProperty()
+                .thru(filterByType),
+            libraryImages: resourcesModel.libraryImages.signal.map(r.pipe(r.values, r.sortBy(r.prop('name')))).thru(filterByType),
             chosenImage
         })
     },
@@ -123,9 +172,9 @@ module.exports = switchboard.component(
                                 searchEnabled
                                 preview={
                                     <div className='file-browser__preview' data-group-modifiers='align-center'>
-                                        { chosenImage.id
+                                        { chosenImage.id !== undefined
                                             ? <VGroup>
-                                                <img alt='preview' src={ chosenImage.body } />
+                                                <ResourcePreview resource={ chosenImage } />
                                                 <Type modifiers='align-center'>{ chosenImage.name }</Type>
                                                 <Type modifiers='align-center'>{ chosenImage.license }</Type>
 
@@ -137,42 +186,7 @@ module.exports = switchboard.component(
                                         }
                                     </div>
                                 }>
-                                <FileExplorer.Folder name='Game Icons' value='game-icons'>
-                                    { threadLast(libraryImages)(
-                                        r.filter((it) => it.source === 'game-icons.net'),
-                                        r.groupBy((it) => it.name[0].toUpperCase()),
-                                        r.toPairs,
-                                        r.map(([folder, items]) =>
-                                            <FileExplorer.Folder
-                                                key={ folder }
-                                                name={ folder }
-                                                value={ 'game-icons' + folder }>
-                                                { items.map((it) =>
-                                                    <FileExplorer.File
-                                                        value={ it.id }
-                                                        name={ it.name }
-                                                        key={ it.id }
-                                                        onDoubleClick={ () => save(it.id) }>
-                                                        <img src={ it.body } alt='thumbnail' />
-                                                    </FileExplorer.File>
-                                                )}
-                                            </FileExplorer.Folder>
-                                        ),
-                                        r.unnest
-                                    ) }
-                                </FileExplorer.Folder>
-
-                                <FileExplorer.Folder name='Fractal Symbols' value='fractal-symbols'>
-                                    { libraryImages.filter((it) => it.source === 'Fractal Icons').map((it) =>
-                                        <FileExplorer.File
-                                            value={ it.id }
-                                            name={ it.name }
-                                            key={ it.id }
-                                            onDoubleClick={ () => save(it.id) }>
-                                            <img src={ it.body } alt='thumbnail' />
-                                        </FileExplorer.File>
-                                    ) }
-                                </FileExplorer.Folder>
+                                { renderLibrary('', libraryImages, save) }
 
                                 <FileExplorer.File
                                     value='upload'
@@ -181,13 +195,13 @@ module.exports = switchboard.component(
                                     <Icon name='upload' />
                                 </FileExplorer.File>
 
-                                { (usedImages || []).map((it) =>
+                                { (userImages || []).concat(usedImages || []).map((it) =>
                                     <FileExplorer.File
                                         value={ it.id }
                                         key={ it.id }
                                         name={ it.name }
                                         onDoubleClick={ () => save(it.id) }>
-                                        <img src={ it.body } alt='thumbnail' />
+                                        <ResourcePreview modifiers='s' resource={ it } />
                                     </FileExplorer.File>
                                 ) }
                             </FileExplorer>

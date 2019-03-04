@@ -4,6 +4,7 @@ let uuid = require('uuid/v4'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),
+    ResourcePreview = require('components/common/ResourcePreview.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
     TestGame = require('components/views/designer/TestGame.js'),
@@ -311,7 +312,7 @@ module.exports = switchboard.component(
                                             onRename={ onRename(it.id, true) }
                                             deleteText='Are you sure you want to delete this resource? All images using it will be reset.'
                                             name={ it.name }>
-                                            <img src={ it.body } alt='thumbnail' />
+                                            <ResourcePreview resource={ it } />
                                         </FileExplorer.File>
                                     ) }
                                 </FileExplorer.Folder>

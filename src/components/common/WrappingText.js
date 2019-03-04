@@ -41,7 +41,7 @@ module.exports = memoizedFunction(
         return <text
             fontWeight={ isBold ? 'bold' : undefined }
             fontStyle={ fontStyle }
-            style={{ fontFamily: JSON.stringify(fontFamily), ...props.style }}
+            style={{ fontFamily: fontFamily || FONT_FAMILY, ...props.style }}
             { ...r.omit(['style'], props) }>{ content }</text>
     }
 )
