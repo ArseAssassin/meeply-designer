@@ -20,11 +20,17 @@
     height 100%
 
 @media print
+    .print--a4 .print__page
+        width 210mm
+        height 297mm
+
+    .print--ansi_letter .print__page
+        width 215.9mm
+        height 279.4mm
+
     .print__page
         border 0
         margin 0
-        width 210mm
-        height 297mm
 
     .design-view__toolbar
         display none

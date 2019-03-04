@@ -86,7 +86,7 @@ module.exports = switchboard.component(
                 r.reverse
             )
 
-        return <div className='print'>
+        return <div className={ modifiersToClass('print', paperSize.toLowerCase()) }>
             <div className='print__tools'>
                 <VGroup>
                     <span>Page count: { pages.reduce((memo, [_, pages]) => memo + pages.length, 0) }</span>
