@@ -13,7 +13,7 @@ module.exports = memoizedFunction(
 
         let availableWidth = isInverted ? height : width,
             ratio = !isInverted ? 0 : height - width,
-            style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''}; font-family: ${JSON.stringify(fontFamily || FONT_FAMILY)};`,
+            style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''}; font-family: '${JSON.stringify(fontFamily || FONT_FAMILY)}';`,
             spaceWidth = measureSVGText(SPACE, helperClass, style)[0][0].width,
             content = threadLast(measureSVGText(children, helperClass, style))(
                 r.map(r.reduce(
@@ -41,7 +41,7 @@ module.exports = memoizedFunction(
         return <text
             fontWeight={ isBold ? 'bold' : undefined }
             fontStyle={ fontStyle }
-            style={{ fontFamily: fontFamily || FONT_FAMILY, ...props.style }}
+            style={{ fontFamily: fontFamily ? JSON.stringify(fontFamily) : FONT_FAMILY, ...props.style }}
             { ...r.omit(['style'], props) }>{ content }</text>
     }
 )

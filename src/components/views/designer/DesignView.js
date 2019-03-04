@@ -193,7 +193,15 @@ module.exports = switchboard.component(
                              .filter(Boolean)],
                             [tabs]
                         )
-                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs) + 1)
+                        .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs) + 1),
+
+                        kefir.combine(
+                            [slot('elements.open')],
+                            [tabs]
+                        )
+                        .map(([id, tabs]) =>
+                            r.findIndex(r.propEq('id', id), tabs) + 1
+                        )
                     ),
                     tabs.map(r.prop('length')).skipDuplicates()
                 ])
