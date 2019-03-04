@@ -5,7 +5,6 @@ let uuid = require('uuid/v4'),
     ResourcePreview = require('components/common/ResourcePreview.js'),
 
     resourcesModel = require('model/resourcesModel.js'),
-    { memoizedFunction } = require('utils/functionUtils.js'),
     gameModel = require('model/gameModel.js'),
     fileUtils = require('utils/fileUtils.js')
 
