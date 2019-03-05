@@ -154,7 +154,7 @@ let getLayer = (layer, layers) =>
                     { layer.type === 'text' &&
                         <VGroup>
                             <HGroup modifiers='align-center'>
-                                T
+                                <Icon name='type' />
                                 {capture(<FormField.Basic name='fontFamily'>
                                     <FileBrowser
                                         id={ layer.id }

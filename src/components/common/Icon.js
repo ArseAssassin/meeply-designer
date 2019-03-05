@@ -23,6 +23,7 @@ let icons = {
     save: require('./../../../node_modules/feather-icons/dist/icons/save.svg'),
     test: require('./../../../node_modules/feather-icons/dist/icons/play-circle.svg'),
     info: require('./../../../node_modules/feather-icons/dist/icons/info.svg'),
+    help: require('./../../../node_modules/feather-icons/dist/icons/help-circle.svg'),
     upload: require('./../../../node_modules/feather-icons/dist/icons/upload-cloud.svg'),
     rename: require('./../../../node_modules/feather-icons/dist/icons/edit-3.svg'),
     edit: require('./../../../node_modules/feather-icons/dist/icons/edit.svg'),

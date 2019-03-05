@@ -4,6 +4,9 @@ let uuid = require('uuid/v4'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),
+    SplashScreen = require('components/views/SplashScreen.js'),
+    Help = require('components/views/Help.js'),
+    WhatsNew = require('components/views/WhatsNew.js'),
     ResourcePreview = require('components/common/ResourcePreview.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     NewElement = require('components/views/designer/NewElement.js'),
@@ -16,6 +19,8 @@ let uuid = require('uuid/v4'),
     gameModel = require('model/gameModel.js'),
     resourcesModel = require('model/resourcesModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
+
+    latestUpdates = require('constants/latestUpdates.js'),
 
     fileUtils = require('utils/fileUtils.js'),
     { addToDeck } = require('utils/gameModelUtils.js')
@@ -228,10 +233,35 @@ module.exports = switchboard.component(
                 slot('new.toggle'), r.not
             ),
             gameName: gameModel.name.signal,
-            fonts: resourcesModel.fonts.signal
+            fonts: resourcesModel.fonts.signal,
+            isHelpDialogOpen: signal(
+                false,
+
+                slot('help.toggle'), r.not
+            ),
+            isSplashOpen: pSignal(
+                'isSplashOpen',
+                true,
+
+                slot('splash.toggle'), r.not
+            ),
+            isWhatsNewOpen: signal(
+                false,
+
+                pSignal(
+                    'lastOpenDate',
+                    new Date().toISOString(),
+
+                    kefir.later(0).map((it) => new Date().toISOString())
+                )
+                .map((it) => new Date(r.head(latestUpdates).date) > new Date(it))
+                .take(1),
+
+                slot('whatsNew.toggle'), r.not
+            )
         })
     },
-    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts }, wire }) =>
+    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts, isSplashOpen, isWhatsNewOpen, isHelpDialogOpen }, wire }) =>
         <div className='design-view'>
             <style ref={ r.pipe(r.always(r.keys(fonts)), wire('fonts.loaded')) }>
                 { r.values(fonts).map((it) => `
@@ -254,14 +284,30 @@ module.exports = switchboard.component(
                 </VGroup>
             </Modal>
 
+            <Modal heading='With Meeply Designer you can...' isOpen={ isSplashOpen } onClose={ wire('splash.toggle') }>
+                <SplashScreen onClose={ wire('splash.toggle')} />
+            </Modal>
+
+            <Modal heading='What&#39;s new?' isOpen={ isWhatsNewOpen } onClose={ wire('whatsNew.toggle') }>
+                <WhatsNew />
+            </Modal>
+
+            <Modal heading='Need help?' isOpen={ isHelpDialogOpen } onClose={ wire('help.toggle') }>
+                <Help />
+            </Modal>
+
             <div className='design-view__toolbar'>
-                <HGroup modifiers='grow align-center margin-none'>
-                    <Button modifiers='s' onClick={ wire('new.toggle') }><Icon name='document' /></Button>
-                    <Button modifiers='s' onClick={ wire('open') }><Icon name='folder' /></Button>
-                    <Button modifiers='s' onClick={ wire('save') }><Icon name='save' /></Button>
-                    <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
-                    <Button modifiers='s' onClick={ wire('test') }><Icon name='test' /></Button>
-                    <Button modifiers='s' onClick={ wire('info') }><Icon name='info' /></Button>
+                <HGroup modifiers='grow align-center justify-space-between margin-none'>
+                    <HGroup modifiers='align-center margin-none'>
+                        <Button modifiers='s' onClick={ wire('new.toggle') }><Icon name='document' /></Button>
+                        <Button modifiers='s' onClick={ wire('open') }><Icon name='folder' /></Button>
+                        <Button modifiers='s' onClick={ wire('save') }><Icon name='save' /></Button>
+                        <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
+                        <Button modifiers='s' onClick={ wire('test') }><Icon name='test' /></Button>
+                        <Button modifiers='s' onClick={ wire('info') }><Icon name='info' /></Button>
+                    </HGroup>
+
+                    <Button modifiers='s' onClick={ wire('help.toggle') }><Icon name='help' /></Button>
                 </HGroup>
             </div>
 
