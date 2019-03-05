@@ -40,7 +40,7 @@ let getLayer = (layer, layers) =>
                         defaultValue: '',
                         validator: required()
                     }
-                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color')))).map((it) => ({ ...it, body: it.body || undefined }))
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape')))).map((it) => ({ ...it, body: it.body || undefined }))
                 )(rest),
                 ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
                 imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
@@ -226,6 +226,15 @@ let getLayer = (layer, layers) =>
                             className='element-view__tool'><Icon name='mirror-v' />
                         </button>
                     </HGroup> }
+
+                    { !layer.type && capture(<FormField name='shape'>
+                        <Input.Select label='Shape' disabled={ layer.template }>
+                            <option value='default'>Rectangle</option>
+                            <option value='roundedRect'>Rounded rectangle</option>
+                            <option value='ellipse'>Ellipse</option>
+                            <option value='hexagon'>Hexagon</option>
+                        </Input.Select>
+                    </FormField>) }
                 </VGroup>
             </div>
     )
@@ -430,6 +439,7 @@ module.exports = switchboard.component(
                 textAlign: 'center',
                 fontSize: 12,
                 fontStyle: undefined,
+                fontFamily: '',
                 isBold: false,
                 x: 0,
                 y: 0,
@@ -628,7 +638,7 @@ module.exports = switchboard.component(
                     <div className='element-view__toolbar-panel' data-group-modifiers='grow'>
                         <Modal isOpen={ templateWarningOpen } heading='Modify template' onClose={ wire('templateWarning.toggle') }>
                             <VGroup modifiers='margin-s'>
-                                <Type modifiers='multiline'>New layers can be added only to the key component. To create a layer that is shown only for this component, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> button. To replace an image, choose your image layer and click Browse.</Type>
+                                <Type modifiers='multiline'>New layers can be added only to the key component. To create a layer that is shown only for this component, you can hide it from other components using the <Icon name='visible' modifiers='inline s' /> button. To replace an image, choose your image layer and click on "Replace".</Type>
 
                                 <HGroup modifiers='grow justify-end margin-s'>
                                     <button onClick={ wire('templateWarning.toggle') }>
@@ -638,7 +648,7 @@ module.exports = switchboard.component(
                                     <button onClick={ (it) => {
                                         wire('templateWarning.toggle')()
                                         onFileChange(element.template)
-                                    } }>Take me to the template</button>
+                                    } }>Take me to the key component</button>
                                 </HGroup>
                             </VGroup>
                         </Modal>

@@ -2,6 +2,7 @@ module.exports = {
     populateTemplate: (template, element) => ({
         width: element.body.width || template.width,
         height: element.body.height || template.height,
+        ...template,
         ...element,
         body:
             template.body.map((it) => r.merge(

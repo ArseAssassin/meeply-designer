@@ -3,6 +3,7 @@ let uuid = require('uuid/v4'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     ResourcePreview = require('components/common/ResourcePreview.js'),
+    Button = require('components/common/Button.js'),
 
     resourcesModel = require('model/resourcesModel.js'),
     gameModel = require('model/gameModel.js'),
@@ -151,7 +152,7 @@ module.exports = switchboard.component(
             <div onClick={ wire('toggle') }>
                 <VGroup modifiers='margin-s'>
                     <Type modifiers='s'>{ resourceName }</Type>
-                    <button>Browse...</button>
+                    <Button modifiers='blue s'>Replace</Button>
                 </VGroup>
             </div>
 
@@ -163,7 +164,7 @@ module.exports = switchboard.component(
                 <VGroup>
                     <HGroup modifiers='grow align-center'>
                         <div className='file-browser__files'>
-                            <FileExplorer
+                            { isOpen && <FileExplorer
                                 defaultValue={ chosenImage.id }
                                 onChange={ wire('image.choose') }
                                 rootName={ <Icon name='home' modifiers='s' /> }
@@ -194,7 +195,7 @@ module.exports = switchboard.component(
                                     <Icon name='upload' />
                                 </FileExplorer.File>
 
-                                { (userImages || []).concat(usedImages || []).map((it) =>
+                                { r.uniqBy(r.prop('id'), (userImages || []).concat(usedImages || [])).map((it) =>
                                     <FileExplorer.File
                                         value={ it.id }
                                         key={ it.id }
@@ -203,7 +204,7 @@ module.exports = switchboard.component(
                                         <ResourcePreview modifiers='s' resource={ it } />
                                     </FileExplorer.File>
                                 ) }
-                            </FileExplorer>
+                            </FileExplorer>}
                         </div>
                     </HGroup>
                 </VGroup>

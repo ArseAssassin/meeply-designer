@@ -4,6 +4,7 @@ let uuid = require('uuid/v4'),
     FormField = require('components/forms/FormField.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     componentForm = require('wireState/componentForm.js'),
+    elementShapes = require('components/views/designer/elementShapes.js'),
 
     templates = require('constants/templates.js')
 
@@ -56,7 +57,7 @@ module.exports = switchboard.component(
                                         height='100%'
                                         viewBox={ `${ - MAX_WIDTH / 2 + it.body.width / 2 - 20 } ${ - MAX_HEIGHT / 2 + it.body.height / 2 - 20 } ${ MAX_WIDTH + 40 } ${ MAX_HEIGHT + 40 }`}
                                         className='new-element__template-face'>
-                                        <rect x='0' y='0' {...it.body} />
+                                        { elementShapes[it.body.shape](it.body) }
                                     </svg>
                                 </FileExplorer.File>
                             ) }

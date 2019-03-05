@@ -24,9 +24,9 @@ module.exports = {
     Slider: ({ modifiers='', ...rest }) =>
         <input type='range' className={ modifiersToClass('input-range',  modifiers) } />,
 
-    Select: ({ modifiers='', ...rest }) =>
+    Select: ({ modifiers='', label, ...rest }) =>
         <label><VGroup modifiers='margin-s'>
-            <span>Paper size</span>
+            <span>{ label }</span>
             <select {...rest} />
         </VGroup></label>
 }

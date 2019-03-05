@@ -1,6 +1,7 @@
 let WrappingText = require('components/common/WrappingText.js'),
     resourcesModel = require('model/resourcesModel.js'),
-    { memoizedFunction } = require('utils/functionUtils.js')
+    { memoizedFunction } = require('utils/functionUtils.js'),
+    elementShapes = require('components/views/designer/elementShapes.js')
 
 
 const TEXT_ALIGN = {
@@ -225,10 +226,11 @@ module.exports = switchboard.component(
                        : propsProperty.skipDuplicates(r.equals).debounce(700)
                 ),
             loadedFonts:
-                resourcesModel.loadedFonts.signal
+                resourcesModel.loadedFonts.signal,
+            elementId: kefir.constant(Math.random().toString())
         }
     },
-    ({ wiredState: { loadedFonts }, wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
+    ({ wiredState: { elementId, loadedFonts }, wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width={ useExactSize ? element.width : '100%'}
@@ -241,17 +243,23 @@ module.exports = switchboard.component(
              ref={ _ref }
              x={ x }
              y={ y }>
-            { showDocument && viewBox &&
-                <rect
-                    className='element-view__canvas'
-                    width={ element.width }
-                    height={ element.height }
-                    x='0'
-                    y='0' /> }
-            { viewBox && (
-                interactive
-                  ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
-                  : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
-            ) }
+
+            { !interactive && <defs>
+                <clipPath id={ elementId }>
+                    { elementShapes[element.shape || 'rect'](element) }
+                </clipPath>
+            </defs> }
+
+            { showDocument && viewBox && elementShapes[element.shape || 'rect'](element) }
+
+            <g clipPath={ !interactive && `url(#${elementId})` }>
+                { viewBox && (
+                    interactive
+                      ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
+                      : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
+                ) }
+            </g>
+
+            { showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline') }
         </svg>
 )
