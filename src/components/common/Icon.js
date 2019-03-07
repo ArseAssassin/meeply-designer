@@ -2,6 +2,7 @@ require('./icon.styl')
 
 let icons = {
     create: require('./../../../node_modules/feather-icons/dist/icons/plus-circle.svg'),
+    share: require('./../../../node_modules/feather-icons/dist/icons/share.svg'),
     x: require('./../../../node_modules/feather-icons/dist/icons/x.svg'),
     folder: require('./../../../node_modules/feather-icons/dist/icons/folder.svg'),
     image: require('./../../../node_modules/feather-icons/dist/icons/image.svg'),

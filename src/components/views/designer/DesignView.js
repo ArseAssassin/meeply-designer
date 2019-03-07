@@ -5,6 +5,7 @@ let uuid = require('uuid/v4'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),
     SplashScreen = require('components/views/SplashScreen.js'),
+    Share = require('components/views/Share.js'),
     Help = require('components/views/Help.js'),
     WhatsNew = require('components/views/WhatsNew.js'),
     ResourcePreview = require('components/common/ResourcePreview.js'),
@@ -258,10 +259,15 @@ module.exports = switchboard.component(
                 .take(1),
 
                 slot('whatsNew.toggle'), r.not
+            ),
+            isShareOpen: signal(
+                false,
+
+                slot('share.toggle'), r.not
             )
         })
     },
-    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts, isSplashOpen, isWhatsNewOpen, isHelpDialogOpen }, wire }) =>
+    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts, isSplashOpen, isWhatsNewOpen, isHelpDialogOpen, isShareOpen }, wire }) =>
         <div className='design-view'>
             <style ref={ r.pipe(r.always(r.keys(fonts)), wire('fonts.loaded')) }>
                 { r.values(fonts).map((it) => `
@@ -296,6 +302,10 @@ module.exports = switchboard.component(
                 <Help />
             </Modal>
 
+            <Modal heading='Share your game' isOpen={ isShareOpen } onClose={ wire('share.toggle') }>
+                <Share />
+            </Modal>
+
             <div className='design-view__toolbar'>
                 <HGroup modifiers='grow align-center justify-space-between margin-none'>
                     <HGroup modifiers='align-center margin-none'>
@@ -305,9 +315,12 @@ module.exports = switchboard.component(
                         <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
                         <Button modifiers='s' onClick={ wire('test') }><Icon name='test' /></Button>
                         <Button modifiers='s' onClick={ wire('info') }><Icon name='info' /></Button>
+                        <Button modifiers='s' onClick={ wire('share.toggle') }><Icon name='share' /></Button>
                     </HGroup>
 
-                    <Button modifiers='s' onClick={ wire('help.toggle') }><Icon name='help' /></Button>
+                    <HGroup modifiers='align-center margin-none'>
+                        <Button modifiers='s' onClick={ wire('help.toggle') }><Icon name='help' /></Button>
+                    </HGroup>
                 </HGroup>
             </div>
 
