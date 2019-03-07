@@ -1,3 +1,5 @@
+let { DISCORD_URL } = require('constants/urls.js')
+
 module.exports = () => <div className='splash-screen'>
     <VGroup modifiers='margin-s'>
         <Type modifiers='multiline'>
@@ -22,7 +24,7 @@ module.exports = () => <div className='splash-screen'>
         </Type>
 
         <Type modifiers='heading align-center l'>
-            join our <a href=''>Discord Community</a>
+            join our <a target='_blank' href={ DISCORD_URL }>Discord Community</a>
         </Type>
     </VGroup>
 </div>
