@@ -17,6 +17,11 @@ module.exports = () => <div className='splash-screen'>
                 How do I replace an image in a subcomponent?
             </blockquote>
             <p>Select the image you want to replace in the subcomponent, and click on "Replace" in the layer properties.</p>
+
+            <blockquote>
+                Are there any paid features?
+            </blockquote>
+            <p>Meeply Designer is completely free to use.</p>
         </Type>
 
         <Type modifiers='align-center'>

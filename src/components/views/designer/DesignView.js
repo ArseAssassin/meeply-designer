@@ -284,7 +284,7 @@ module.exports = switchboard.component(
                 </VGroup>
             </Modal>
 
-            <Modal heading='With Meeply Designer you can...' isOpen={ isSplashOpen } onClose={ wire('splash.toggle') }>
+            <Modal isOpen={ isSplashOpen } onClose={ wire('splash.toggle') }>
                 <SplashScreen onClose={ wire('splash.toggle')} />
             </Modal>
 
