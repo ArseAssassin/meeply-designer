@@ -229,7 +229,7 @@ let getLayer = (layer, layers) =>
 
                     { !layer.type && capture(<FormField name='shape'>
                         <Input.Select label='Shape' disabled={ layer.template }>
-                            <option value='default'>Rectangle</option>
+                            <option value='rect'>Rectangle</option>
                             <option value='roundedRect'>Rounded rectangle</option>
                             <option value='ellipse'>Ellipse</option>
                             <option value='hexagon'>Hexagon</option>
