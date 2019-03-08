@@ -23,6 +23,7 @@ module.exports = switchboard.component(
             showCropMarks: pSignal('showCropMarks', true, slot('showCropMarks.set')),
             selectorShown: signal(false, slot('selector.toggle'), r.not),
             paperSize: pSignal('paperSize', 'A4', slot('paperSize.set')),
+            cardBackMode: pSignal('cardBackMode', 'none', slot('cardBackMode.set')),
             decks:
                 gameModel.elements.populateTemplate(gameModel.elements.signal.map(r.filter((it) => !it.template))),
             counts:
@@ -55,7 +56,7 @@ module.exports = switchboard.component(
         })
     }),
 
-    ({ wiredState: { elements, paperSize, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
+    ({ wiredState: { elements, cardBackMode, paperSize, decks, counts, pageMargin, showCutlines, selectedComponents, showCropMarks, selectorShown }, wire }) => {
         let [canvasWidth, canvasHeight] = PAPER_SIZES[paperSize].map((it) => it * DEFAULT_PPI),
             pages = threadLast(elements)(
                 r.filter((it) => r.contains(it.id, selectedComponents)),
@@ -64,21 +65,55 @@ module.exports = switchboard.component(
                 r.groupBy((it) => it.width + '-' + it.height),
                 r.mapObjIndexed((it) => {
                     let { width, height } = it[0],
+                        requiredWidth = cardBackMode === 'fold' ? width * 2 : width,
                         actualCanvasWidth = canvasWidth - pageMargin * 2,
                         actualCanvasHeight = canvasHeight - pageMargin * 2,
-                        hElements = Math.floor(actualCanvasWidth / width),
+                        hElements = Math.floor(actualCanvasWidth / requiredWidth),
                         vElements = Math.floor(actualCanvasHeight / height),
                         allowedElements = hElements * vElements,
-                        elementMarginWidth = actualCanvasWidth / hElements + (actualCanvasWidth / hElements - width) / hElements,
-                        elementMarginHeight = actualCanvasHeight / vElements + (actualCanvasHeight / vElements - height) / vElements
+                        elementMarginWidth = (actualCanvasWidth - hElements * requiredWidth) / Math.max(1, hElements - 1) + requiredWidth,
+                        elementMarginHeight = (actualCanvasHeight - vElements * height) / Math.max(1, vElements - 1) + height
 
                     return threadLast(it)(
                         r.splitEvery(allowedElements),
-                        r.map(r.addIndex(r.map)((it, idx) => ({
-                            ...it,
-                            x: pageMargin + (idx % hElements) * elementMarginWidth,
-                            y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight
-                        })))
+                        r.map(r.pipe(
+                            r.addIndex(r.map)((it, idx) => [
+                                {
+                                    ...it,
+                                    x: pageMargin + (idx % hElements) * elementMarginWidth,
+                                    y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight,
+                                    disabledGuides:
+                                        cardBackMode === 'fold'
+                                            ? ['ne', 'se']
+                                            : []
+                                },
+                                cardBackMode === 'fold'
+                                  ? {
+                                        ...it,
+                                        x: pageMargin + (idx % hElements) * elementMarginWidth + width,
+                                        y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight,
+                                        isBack: true,
+                                        disabledGuides: ['nw', 'sw']
+                                    }
+                                  : undefined
+                            ].filter(Boolean)),
+                            r.unnest,
+                            (it) => [
+                                cardBackMode !== 'only' ? it : undefined,
+                                r.contains(cardBackMode, words('sheet only duplex'))
+                                  ? threadLast(it)(
+                                        r.map((it) => ({
+                                            ...it,
+                                            x: cardBackMode === 'duplex'
+                                                ? it.x * -1 - it.width + canvasWidth
+                                                : it.x,
+                                            isBack: true
+                                        }))
+                                    )
+                                  : undefined
+                            ].filter(Boolean)
+                        )),
+                        r.unnest
                     )
                 }),
                 r.toPairs,
@@ -93,41 +128,54 @@ module.exports = switchboard.component(
 
                     <Button modifiers='blue l' onClick={ () => window.print() }>Print game</Button>
 
-                    <HGroup modifiers='justify-center align-center'>
-                        <Input.Select label='Paper size' value={ paperSize } onChange={ r.pipe(r.path(words('target value')), wire('paperSize.set')) }>
-                            <option value='A4'>A4</option>
-                            <option value='ANSI_LETTER'>Letter (8.5" x 11")</option>
-                        </Input.Select>
+                    <VGroup>
+                        <HGroup modifiers='justify-center align-center'>
+                            <Input.Select label='Paper size' value={ paperSize } onChange={ r.pipe(r.path(words('target value')), wire('paperSize.set')) }>
+                                <option value='A4'>A4</option>
+                                <option value='ANSI_LETTER'>Letter (8.5" x 11")</option>
+                            </Input.Select>
 
-                        <HGroup modifiers='margin-s'>
-                            <span>Page margin</span>
+                            <Input.Select
+                                label='Card back printing'
+                                value={ cardBackMode }
+                                onChange={ r.pipe(r.path(words('target value')), wire('cardBackMode.set'))}>
+                                <option value='none'>Not printed</option>
+                                <option value='fold'>Folded</option>
+                                <option value='sheet'>By sheet</option>
+                                <option value='duplex'>Duplex</option>
+                                <option value='only'>Only backs</option>
+                            </Input.Select>
+
                             <Input.Number
+                                label='Page margin'
                                 onChange={ r.pipe(r.path(words('target value')), parseInt, wire('margin.set')) }
                                 value={ pageMargin } />
                         </HGroup>
 
-                        <Input.Checkbox
-                            checked={ showCropMarks }
-                            onChange={ r.pipe(r.path(words('target checked')), wire('showCropMarks.set')) }
-                            label='Show crop marks' />
+                        <HGroup modifiers='justify-center align-center'>
+                            <Input.Checkbox
+                                checked={ showCropMarks }
+                                onChange={ r.pipe(r.path(words('target checked')), wire('showCropMarks.set')) }
+                                label='Show crop marks' />
 
-                        <Input.Checkbox
-                            checked={ showCutlines }
-                            onChange={ r.pipe(r.path(words('target checked')), wire('showCutlines.set')) }
-                            label='Show cutlines' />
+                            <Input.Checkbox
+                                checked={ showCutlines }
+                                onChange={ r.pipe(r.path(words('target checked')), wire('showCutlines.set')) }
+                                label='Show cutlines' />
 
-                        <HGroup modifiers='margin-s align-center'>
-                            Printing
-                            <Button modifiers='aqua s' onClick={ wire('selector.toggle') }>
-                                <HGroup modifiers='align-center margin-s'>
-                                    { selectedComponents.length === elements.length
-                                        ? 'all components'
-                                        : `${ selectedComponents.length } components` }
-                                    <Icon name='edit' modifiers='s' />
-                                </HGroup>
-                            </Button>
+                            <HGroup modifiers='margin-s align-center'>
+                                Printing
+                                <Button modifiers='aqua s' onClick={ wire('selector.toggle') }>
+                                    <HGroup modifiers='align-center margin-s'>
+                                        { selectedComponents.length === elements.length
+                                            ? 'all components'
+                                            : `${ selectedComponents.length } components` }
+                                        <Icon name='edit' modifiers='s' />
+                                    </HGroup>
+                                </Button>
+                            </HGroup>
                         </HGroup>
-                    </HGroup>
+                    </VGroup>
                 </VGroup>
             </div>
 
@@ -198,10 +246,23 @@ module.exports = switchboard.component(
                                     right = it.x + it.width,
                                     righter = Math.min(canvasWidth, ...page.map((it) => it.x).filter((it) => it > right)),
                                     bottom = it.y + it.height,
-                                    bottomer = Math.min(canvasHeight, ...page.map((it) => it.y).filter((it) => it > bottom))
+                                    bottomer = Math.min(canvasHeight, ...page.map((it) => it.y).filter((it) => it > bottom)),
+                                    disabledGuides = {
+                                        nw: [left, top],
+                                        sw: [left, bottom],
+                                        ne: [right, top],
+                                        se: [right, bottom]
+                                    }
 
                                 return <g>
-                                    {showCropMarks && [[left, top, lefter, top], [left, top, left, topper], [right, top, right, topper], [right, top, righter, top], [left, bottom, lefter, bottom], [left, bottom, left, bottomer], [right, bottom, righter, bottom], [right, bottom, right, bottomer]].map((it) =>
+                                    {showCropMarks && [[left, top, lefter, top], [left, top, left, topper], [right, top, right, topper], [right, top, righter, top], [left, bottom, lefter, bottom], [left, bottom, left, bottomer], [right, bottom, righter, bottom], [right, bottom, right, bottomer]]
+                                        .filter(([h, v]) =>
+                                            !r.any(
+                                                ([name, disabled]) => r.contains(name, it.disabledGuides) && r.equals(disabled, [h, v]),
+                                                r.toPairs(disabledGuides)
+                                            )
+                                        )
+                                        .map((it) =>
                                             <polyline
                                                 key={ it.join(' ') }
                                                 className='print__guide'
@@ -211,13 +272,14 @@ module.exports = switchboard.component(
                                     <ElementRenderer
                                         x={ it.x }
                                         y={ it.y }
+                                        sides={ it.isBack ? 'back' : 'front' }
                                         key={ it.id }
                                         useExactSize
                                         showDocument={ showCutlines }
                                         element={ it }
                                         realTime
                                         style={{ width: it.width / DEFAULT_PPI + 'in', height: it.height / DEFAULT_PPI + 'in' }}
-                                        viewBox={ `0 0 ${ it.width } ${ it.height }`} />
+                                        viewBox={ `${ it.isBack ? -it.width - 20 : 0 } 0 ${ it.width } ${ it.height }`} />
                                 </g>
                             })}
                         </svg>

@@ -40,7 +40,7 @@ let getLayer = (layer, layers) =>
                         defaultValue: '',
                         validator: required()
                     }
-                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape')))).map((it) => ({ ...it, body: it.body || undefined }))
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape showBack')))).map((it) => ({ ...it, body: it.body || undefined }))
                 )(rest),
                 ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
                 imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
@@ -235,6 +235,10 @@ let getLayer = (layer, layers) =>
                             <option value='hexagon'>Hexagon</option>
                         </Input.Select>
                     </FormField>) }
+
+                    { !layer.type && capture(<FormField.Checkbox name='showBack'>
+                        <Input.Checkbox label='Show card back' disabled={ layer.template } />
+                    </FormField.Checkbox>) }
                 </VGroup>
             </div>
     )
@@ -601,6 +605,7 @@ module.exports = switchboard.component(
                 </div>
                 <ElementRenderer
                     interactive
+                    sides={ element.showBack ? 'both' : 'front' }
                     modifiers={ [documentMode && 'document-mode', grabbing && 'grabbing'] }
                     realTime
                     debounceUpdates={ 0 }

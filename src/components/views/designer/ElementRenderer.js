@@ -230,7 +230,7 @@ module.exports = switchboard.component(
             elementId: kefir.constant(Math.random().toString())
         }
     },
-    ({ wiredState: { elementId, loadedFonts }, wire, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
+    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width={ useExactSize ? element.width : '100%'}
@@ -246,11 +246,15 @@ module.exports = switchboard.component(
 
             { !interactive && <defs>
                 <clipPath id={ elementId }>
-                    { elementShapes[element.shape || 'rect'](element) }
+                    { elementShapes[element.shape || 'rect'](element, undefined, sides === 'back') }
                 </clipPath>
             </defs> }
 
             { showDocument && viewBox && elementShapes[element.shape || 'rect'](element) }
+            { r.contains(sides, words('both back')) && showDocument && viewBox && <g>
+                { elementShapes[element.shape || 'rect'](element, 'element-view__canvas', true) }
+                <text className='element-view__card-title' x='-30' y='-10' textAnchor='end'>Back</text>
+            </g> }
 
             <g clipPath={ !interactive && `url(#${elementId})` }>
                 { viewBox && (
@@ -261,5 +265,6 @@ module.exports = switchboard.component(
             </g>
 
             { showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline') }
+            { r.contains(sides, words('both back')) && showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline', true) }
         </svg>
 )

@@ -33,6 +33,7 @@ module.exports = switchboard.component(
                 ...templates[formValue.template].body,
                 id: uuid(),
                 count: 1,
+                showBack: false,
                 body: [] }),
             onSubmit
         ) }>

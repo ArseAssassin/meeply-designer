@@ -1,8 +1,12 @@
 module.exports = r.mapObjIndexed(
-    (fn) => (it, className='element-view__canvas') => {
+    (fn) => (it, className='element-view__canvas', isBack) => {
         let component = fn(it)
 
-        return React.cloneElement(component, { ...component.props, className })
+        return React.cloneElement(component, {
+            ...component.props,
+            className,
+            ...(isBack ? { x: -it.width - 20 } : {})
+        })
     },
 
     {
