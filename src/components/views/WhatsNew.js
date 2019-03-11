@@ -15,7 +15,7 @@ module.exports = () =>
 
             <VGroup modifiers='margin-s'>
                 <Type modifiers='heading l align-center'>...and for more: join our community at</Type>
-                <Type modifiers='heading l align-center'><a target='_blank' href={ DISCORD_URL }>Discord</a></Type>
+                <Type modifiers='heading l align-center'><a target='_blank' rel='noopener noreferrer' href={ DISCORD_URL }>Discord</a></Type>
             </VGroup>
         </VGroup>
     </div>

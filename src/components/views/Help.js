@@ -29,7 +29,7 @@ module.exports = () => <div className='splash-screen'>
         </Type>
 
         <Type modifiers='heading align-center l'>
-            join our <a target='_blank' href={ DISCORD_URL }>Discord Community</a>
+            join our <a target='_blank' rel='noopener noreferrer' href={ DISCORD_URL }>Discord Community</a>
         </Type>
     </VGroup>
 </div>

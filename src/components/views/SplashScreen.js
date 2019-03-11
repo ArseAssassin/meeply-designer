@@ -5,7 +5,7 @@ require('./splash-screen.styl')
 module.exports = ({ onClose }) => <VGroup>
     <div className='splash-screen'>
         <VGroup>
-            <img className='splash-screen__logo' src={ require('../../../assets/logo.png') } />
+            <img alt='Meeply Designer' className='splash-screen__logo' src={ require('../../../assets/logo.png') } />
 
             <Type modifiers='align-center heading l'>With Meeply Designer you can</Type>
 
