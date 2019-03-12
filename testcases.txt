@@ -1,0 +1,86 @@
+User can see splash screen
+Splash, help and share can be closed from x or clicking outside modal
+Splash screen can be closed by clicking on button
+User can double click on "new component set" to create a new component set
+User can create every template correctly
+User can set component set name
+User can access component set view
+User can rename component set
+User can delete created component sets from top level view
+User can delete created component sets from component set view
+User can delete a sub-component from component set list view
+User can rename a sub-component in component set list view
+User can create a new sub-component from component set list view
+User can adjust component width and height
+User can set component shape
+User can show and hide card back
+User can add a new image
+User can view ready-made icon library
+User can search ready-made icon library
+User can see selected component license
+User can see selected component preview
+User can save selected component
+User can upload a custom image
+User can move image by selecting and dragging it on canvas
+User can move image by assigning it new X and Y values
+User can resize image by selecting and dragging grabbers on canvas
+User can resize image by assigning it new W and H values
+User can set image name
+User can rotate and mirror image
+User can add a new text box
+User can bold and italicize text
+User can edit text box content
+User can set text box name
+User can move textbox by selecting and dragging it on canvas
+User can move textbox by assigning it new X and Y values
+User can resize textbox by selecting and dragging grabbers on canvas
+User can resize textbox by assigning it new W and H values
+User can lock and unlock a layer
+User can't select a locked layer by clicking on it on the canvas
+User can see locked layer as dimmed in sub-components
+User can change textbox font
+User can change font textbox font size
+User can change font textbox font color
+User can change font textbox text alignment
+User can rotate and mirror image
+User can delete component layer from key component
+User can't delete component from layer list
+User can't delete component layer from sub-component
+User can delete a sub-component from component list
+User can rename a sub-component from component list
+User can adjust the number of components from design view list
+User can see the key component marked in the design view list
+User can create a new component from design view
+User can see a help dialog when trying to add a new image to a component
+User can see a help dialog when trying to add a new textbox to a component
+User can replace an image in a sub-component
+User can reset an image in a sub-component
+User can hide an image in a sub-component
+User can replace a textbox content in a sub-component
+User can reset a textbox in a sub-component
+User can hide a textbox in a sub-component
+User can hide a layer in a key component and show it in a sub-component
+User can see whether sub-component layer has changes by a link icon
+User can zoom in design view
+User can zoom out design view
+User can see used custom images and fonts in the resources view
+User can rename used custom images and fonts in the resources view
+User can delete used custom images and fonts from the resources view
+User can create a new project
+User can open a project
+User can save a project
+User can get instructions on how to share a game
+User can join Discord from share dialog
+User can get instructions on how to use Meeply from help dialog
+User can join Discord from help dialog
+User can see game component distributions from game information view
+User can rename game from game information view
+User can test drawing sample decks from playtest view
+User can open print view
+User can set used paper size
+User can set used card back printing mode
+User can set used page margin
+User can toggle crop marks the printed page
+User can toggle cutlines in the printed page
+User can select which components to print
+User can print multiple copies of a component
