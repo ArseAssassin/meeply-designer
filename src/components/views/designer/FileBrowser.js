@@ -77,7 +77,7 @@ module.exports = switchboard.component(
             .takeUntilBy(isAlive.filter(r.not).map(r.always(undefined))),
             type = propsProperty.map(r.prop('type')).skipDuplicates(),
             filterByType = (it) =>
-                kefir.combine([it, type])
+                kefir.combine([it.map(r.filter(Boolean)), type])
                 .toProperty()
                 .map(([it, type]) => it.filter((it) => type === 'font' ? it.type === 'font' : it.type !== 'font'))
 
