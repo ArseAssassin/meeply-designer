@@ -84,3 +84,4 @@ User can toggle crop marks the printed page
 User can toggle cutlines in the printed page
 User can select which components to print
 User can print multiple copies of a component
+User can export images
