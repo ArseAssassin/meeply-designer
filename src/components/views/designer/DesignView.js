@@ -7,6 +7,7 @@ let uuid = require('uuid/v4'),
     SplashScreen = require('components/views/SplashScreen.js'),
     Share = require('components/views/Share.js'),
     Help = require('components/views/Help.js'),
+    Export = require('components/views/designer/tabs/Export.js'),
     WhatsNew = require('components/views/WhatsNew.js'),
     ResourcePreview = require('components/common/ResourcePreview.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
@@ -64,6 +65,11 @@ let tabTypes = {
             component: GameInfo,
             props: r.always({}),
             label: r.always('Game information')
+        },
+        export: {
+            component: Export,
+            props: r.always({}),
+            label: r.always('Export')
         }
     },
     onDelete = (id, isImage) => r.pipe(
@@ -94,21 +100,28 @@ module.exports = switchboard.component(
                 (it) => it.concat({
                     component: 'print',
                     props: {},
-                    id: uuid()
+                    id: 'print'
                 }),
 
                 slot('info'),
                 (it) => it.concat({
                     component: 'info',
                     props: {},
-                    id: uuid()
+                    id: 'info'
                 }),
 
                 slot('test'),
                 (it) => it.concat({
                     component: 'test',
                     props: {},
-                    id: uuid()
+                    id: 'test'
+                }),
+
+                slot('export'),
+                (it) => it.concat({
+                    component: 'export',
+                    props: {},
+                    id: 'export'
                 }),
 
                 slot('tab.change'),
@@ -139,7 +152,7 @@ module.exports = switchboard.component(
             [slot('save')],
             [gameModel.elements.signal, resourcesModel.userImages.signal, gameModel.name.signal]
         )
-        .onValue(([_, elements, resources, name]) => fileUtils.save(name + '.json', {
+        .onValue(([_, elements, resources, name]) => fileUtils.saveJSON(name + '.json', {
             version: 1,
             elements,
             resources,
@@ -178,9 +191,6 @@ module.exports = switchboard.component(
         addToDeck(slot('deck.add'))
         .map(r.prop('id'))
         .to(slot('elements.open'))
-
-        slot('fonts.loaded')
-        .to(resourcesModel.loadedFonts.set)
 
         return ({
             selectedTab:
@@ -234,7 +244,6 @@ module.exports = switchboard.component(
                 slot('new.toggle'), r.not
             ),
             gameName: gameModel.name.signal,
-            fonts: resourcesModel.fonts.signal,
             isHelpDialogOpen: signal(
                 false,
 
@@ -267,16 +276,8 @@ module.exports = switchboard.component(
             )
         })
     },
-    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, fonts, isSplashOpen, isWhatsNewOpen, isHelpDialogOpen, isShareOpen }, wire }) =>
+    ({ wiredState: { userImages, tabState, gameName, decks, selectedTab, tabs, elements, counts, isNewConfirmationOpen, isSplashOpen, isWhatsNewOpen, isHelpDialogOpen, isShareOpen }, wire }) =>
         <div className='design-view'>
-            <style ref={ r.pipe(r.always(r.keys(fonts)), wire('fonts.loaded')) }>
-                { r.values(fonts).map((it) => `
-                    @font-face {
-                        font-family: '${it.id}';
-                        src: url(${it.body});
-                    }
-                `) }
-            </style>
             <Modal isOpen={ isNewConfirmationOpen } onClose={ wire('new.toggle') } heading='Create new project'>
                 <VGroup>
                     <Type modifiers='align-center'>
@@ -312,6 +313,7 @@ module.exports = switchboard.component(
                         <Button modifiers='s' onClick={ wire('new.toggle') }><Icon name='document' /></Button>
                         <Button modifiers='s' onClick={ wire('open') }><Icon name='folder' /></Button>
                         <Button modifiers='s' onClick={ wire('save') }><Icon name='save' /></Button>
+                        <Button modifiers='s' onClick={ wire('export') }><Icon name='download' /></Button>
                         <Button modifiers='s' onClick={ wire('print') }><Icon name='print' /></Button>
                         <Button modifiers='s' onClick={ wire('test') }><Icon name='test' /></Button>
                         <Button modifiers='s' onClick={ wire('info') }><Icon name='info' /></Button>

@@ -1,9 +1,12 @@
 let fileSaver = require('file-saver')
 
 module.exports = {
-    save: (name, body) => {
+    saveJSON: (name, body) => {
         let blob = new Blob([JSON.stringify(body)], { type: 'application/json;charset=utf-8' })
 
+        fileSaver.saveAs(blob, name)
+    },
+    saveBlob: (name, blob) => {
         fileSaver.saveAs(blob, name)
     },
     load: (accept) => {

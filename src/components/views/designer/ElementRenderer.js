@@ -1,4 +1,6 @@
 let WrappingText = require('components/common/WrappingText.js'),
+    FontStyleSheet = require('components/common/FontStyleSheet.js'),
+
     resourcesModel = require('model/resourcesModel.js'),
     { memoizedFunction } = require('utils/functionUtils.js'),
     elementShapes = require('components/views/designer/elementShapes.js')
@@ -16,13 +18,42 @@ let getTransform = ({ rotation, mirror, x, y, width, height }) => [
     ].filter(Boolean).join(' '),
 
     Image = switchboard.component(
-        ({ propsProperty }) => ({
-            href:
-                propsProperty
-                .map(r.path(words('layer body')))
-                .thru(resourcesModel.images.getById)
-                .map(r.prop('body'))
+        ({ propsProperty, signal }) => ({
+            href: signal(
+                '',
+
+                propsProperty.map(r.prop('fetchMode'))
                 .skipDuplicates()
+                .flatMapLatest((fetchMode) =>
+                    propsProperty
+                    .map(r.path(words('layer body')))
+                    .thru(resourcesModel.images.getById)
+                    .filter(Boolean)
+                    .map(r.prop('body'))
+                    .skipDuplicates()
+                    .thru((it) =>
+                        fetchMode !== 'inline'
+                          ? it
+                          : it.flatMapLatest((it) =>
+                                it.indexOf('data:') === 0
+                                  ? kefir.constant(it)
+                                  : kefir.fromPromise(fetch(it))
+                                    .flatMapLatest((it) => kefir.fromPromise(it.blob()))
+                                    .flatMapLatest((it) => {
+                                        let reader = new FileReader(),
+                                            response = kefir.fromEvents(reader, 'load')
+
+                                        reader.readAsDataURL(it)
+
+                                        return response.map((it) => reader.result)
+                                    })
+                            )
+                    )
+
+                )
+
+            )
+
         }),
         ({ wiredState: { href }, layer }) =>
             <image
@@ -32,8 +63,8 @@ let getTransform = ({ rotation, mirror, x, y, width, height }) => [
     )
 
 let renderers = {
-        'image': (it) =>
-            <Image layer={ it } />,
+        'image': (it, _, fetchMode) =>
+            <Image layer={ it } fetchMode={ fetchMode } />,
         'text': (it, loadedFonts) =>
             <WrappingText
                 x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
@@ -165,13 +196,13 @@ let renderers = {
                 { points.map((it, idx) => it(layer.x, layer.y, layer.width, layer.height, wire('resize.start'))) }
             </g>
     ),
-    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts) =>
+    renderElement = (it, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts, fetchMode) =>
         threadLast(it)(
             r.prop('body'),
             r.filter((it) => !it.hidden),
             r.map((it) =>
                 <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
-                    { threadLast(renderers[it.type || ''](it, loadedFonts))(
+                    { threadLast(renderers[it.type || ''](it, loadedFonts, fetchMode))(
                         (it) =>
                             interactive && onLayerInteract && !it.isLocked
                               ? React.cloneElement(
@@ -230,7 +261,7 @@ module.exports = switchboard.component(
             elementId: kefir.constant(Math.random().toString())
         }
     },
-    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y }) =>
+    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y, fetchMode='normal' }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width={ useExactSize ? element.width : '100%'}
@@ -243,6 +274,8 @@ module.exports = switchboard.component(
              ref={ _ref }
              x={ x }
              y={ y }>
+
+            <FontStyleSheet />
 
             { !interactive && <defs>
                 <clipPath id={ elementId }>
@@ -259,8 +292,8 @@ module.exports = switchboard.component(
             <g clipPath={ !interactive && `url(#${elementId})` }>
                 { viewBox && (
                     interactive
-                      ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
-                      : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts)
+                      ? renderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts, fetchMode)
+                      : memoizedRenderElement(element, onLayerInteract, selectedLayer, zoomLevel, interactive, loadedFonts, fetchMode)
                 ) }
             </g>
 

@@ -6,7 +6,7 @@ const
     SPACE = '\u00A0'
 
 module.exports = memoizedFunction(
-    ({ x, y, isInverted, children, height, width, helperClass, isBold, fontStyle, fontFamily, ...props }) => {
+    ({ x, y, isInverted, children, height, width, helperClass, isBold, fontStyle, fontFamily, loadedFonts, ...props }) => {
         if (!children) {
             return null
         }
@@ -41,6 +41,7 @@ module.exports = memoizedFunction(
         return <text
             fontWeight={ isBold ? 'bold' : undefined }
             fontStyle={ fontStyle }
+            data-is-loaded={ !fontFamily || r.contains(fontFamily, loadedFonts) }
             style={{ fontFamily: fontFamily ? JSON.stringify(fontFamily) : FONT_FAMILY, ...props.style }}
             { ...r.omit(['style'], props) }>{ content }</text>
     }

@@ -37,6 +37,7 @@ let icons = {
     unlock: require('./../../../node_modules/feather-icons/dist/icons/unlock.svg'),
     bold: require('./../../../node_modules/feather-icons/dist/icons/bold.svg'),
     italic: require('./../../../node_modules/feather-icons/dist/icons/italic.svg'),
+    download: require('./../../../node_modules/feather-icons/dist/icons/download.svg'),
     'rotate-cw': require('./../../../node_modules/feather-icons/dist/icons/rotate-cw.svg'),
     'rotate-ccw': require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg'),
     'mirror-h': require('./../../../node_modules/feather-icons/dist/icons/refresh-ccw.svg'),
