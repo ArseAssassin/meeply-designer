@@ -16,12 +16,8 @@ let PrintedElement = switchboard.component(
                 .flatMapLatest((it) =>
                     kefir.fromPoll(100, () =>
                         r.all(
-                            (it) => it.getAttribute('href'),
-                            Array.from(it.querySelectorAll('image'))
-                        ) &&
-                        r.all(
                             (it) => it.getAttribute('data-is-loaded') === 'true',
-                            Array.from(it.querySelectorAll('text'))
+                            Array.from(it.querySelectorAll('image, text'))
                         )
                     )
                     .filter(Boolean)

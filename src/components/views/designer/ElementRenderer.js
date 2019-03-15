@@ -59,6 +59,7 @@ let getTransform = ({ rotation, mirror, x, y, width, height }) => [
             <image
                 href={ href }
                 transform={ getTransform(layer) }
+                data-is-loaded={ Boolean(href) }
                 {...r.pick(words('x y width height'), layer) } />,
     )
 

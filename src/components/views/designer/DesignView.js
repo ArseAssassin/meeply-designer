@@ -85,48 +85,47 @@ let tabTypes = {
 module.exports = switchboard.component(
     ({ signal, slot }) => {
         let pSignal = persistentSignal(signal),
+            createdTabs = kefir.merge([
+                slot('elements.new').map(r.always({
+                    component: 'newElement',
+                    props: {},
+                    id: 'newElement'
+                })),
+
+                slot('print').map(r.always({
+                    component: 'print',
+                    props: {},
+                    id: 'print'
+                })),
+
+                slot('info').map(r.always({
+                    component: 'info',
+                    props: {},
+                    id: 'info'
+                })),
+
+                slot('test').map(r.always({
+                    component: 'test',
+                    props: {},
+                    id: 'test'
+                })),
+
+                slot('export').map(r.always({
+                    component: 'export',
+                    props: {},
+                    id: 'export'
+                }))
+            ]),
             tabs = pSignal(
                 'project-tabs',
                 [],
 
-                slot('elements.new'),
-                (it) => it.concat({
-                    component: 'newElement',
-                    props: {},
-                    id: uuid()
-                }),
-
-                slot('print'),
-                (it) => it.concat({
-                    component: 'print',
-                    props: {},
-                    id: 'print'
-                }),
-
-                slot('info'),
-                (it) => it.concat({
-                    component: 'info',
-                    props: {},
-                    id: 'info'
-                }),
-
-                slot('test'),
-                (it) => it.concat({
-                    component: 'test',
-                    props: {},
-                    id: 'test'
-                }),
-
-                slot('export'),
-                (it) => it.concat({
-                    component: 'export',
-                    props: {},
-                    id: 'export'
-                }),
+                createdTabs,
+                (it, tab) => r.uniqBy(r.prop('id'), it.concat(tab)),
 
                 slot('tab.change'),
                 (it, [index, elementId]) =>
-                    r.adjust(index, (it) => ({ ...it, props: { ...it.props, id: elementId }}), it),
+                    r.adjust(index, (it) => ({ ...it, props: { ...it.props, id: elementId }, id: elementId }), it),
 
                 kefir.combine(
                     [slot('elements.open')],
@@ -202,11 +201,7 @@ module.exports = switchboard.component(
                         slot('tabs.select'),
 
                         kefir.combine(
-                            [tabs.map(r.map(r.prop('id')))
-                             .skipDuplicates(r.equals)
-                             .slidingWindow(2, 2)
-                             .map(([prev, next]) => r.difference(next, prev)[0])
-                             .filter(Boolean)],
+                            [createdTabs.map(r.prop('id'))],
                             [tabs]
                         )
                         .map(([id, tabs]) => r.findIndex(r.propEq('id', id), tabs) + 1),
