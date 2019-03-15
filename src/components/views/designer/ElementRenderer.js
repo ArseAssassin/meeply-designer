@@ -202,7 +202,7 @@ let renderers = {
             r.prop('body'),
             r.filter((it) => !it.hidden),
             r.map((it) =>
-                <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy') }>
+                <g className={ modifiersToClass('element-view__svg-layer', selectedLayer === it.id && 'selected', it.isCopy && 'copy', it.isLocked && 'locked') }>
                     { threadLast(renderers[it.type || ''](it, loadedFonts, fetchMode))(
                         (it) =>
                             interactive && onLayerInteract && !it.isLocked
