@@ -1,7 +1,3 @@
 - create default text box
 - set alignment as right
 - click on rotate right
-
-- create two overlapping components
-- lock the top one
-- click on the lower one on the canvas
