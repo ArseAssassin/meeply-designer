@@ -1,10 +1,18 @@
+let { rgbToHex } = require('utils/colorUtils.js')
+
 module.exports = r.mapObjIndexed(
     (fn) => (it, className='element-view__canvas', isBack) => {
         let component = fn(it, isBack)
 
         return React.cloneElement(component, {
             ...component.props,
-            className
+            className,
+            style: {
+                fill:
+                    it.bgColor
+                      ? rgbToHex(it.bgColor)
+                      : '#ffffff'
+            }
         })
     },
 

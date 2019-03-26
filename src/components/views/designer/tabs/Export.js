@@ -59,7 +59,7 @@ let PrintedElement = switchboard.component(
         return {}
     },
     ({ element, wire, isBack }) =>
-        <div style={{ display: 'none' }}>
+        <div>
             <canvas width={ element.width } height={ element.height } ref={ wire('canvas.ref') } style={{ width: element.width + 'px', height: element.height + 'px'}}>
             </canvas>
 
@@ -67,6 +67,8 @@ let PrintedElement = switchboard.component(
                 <ElementRenderer
                     sides={ !isBack ? 'front' : 'back' }
                     _ref={ wire('element.ref') }
+                    showCutlines={ false }
+                    showDocument
                     useExactSize
                     fetchMode='inline'
                     element={ element }
@@ -134,7 +136,7 @@ module.exports = switchboard.component(
               : <Type modifiers='align-center heading l'>Exporting images...</Type> }
 
             { elements.map((it) =>
-                <div style={{ display: 'none' }} key={ it.id }>
+                <div key={ it.id } style={{ display: 'none' }}>
                     <PrintedElement
                         element={ it }
                         onRender={ r.pipe(r.pair(it), wire('element.rendered')) } />

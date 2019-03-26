@@ -41,6 +41,8 @@ let icons = {
     'rotate-cw': require('./../../../node_modules/feather-icons/dist/icons/rotate-cw.svg'),
     'rotate-ccw': require('./../../../node_modules/feather-icons/dist/icons/rotate-ccw.svg'),
     'mirror-h': require('./../../../node_modules/feather-icons/dist/icons/refresh-ccw.svg'),
+    'chevron-down': require('./../../../node_modules/feather-icons/dist/icons/chevron-down.svg'),
+    'chevron-up': require('./../../../node_modules/feather-icons/dist/icons/chevron-up.svg'),
     'mirror-v': require('./mirror-v.svg'),
     key: require('./key.svg')
 }

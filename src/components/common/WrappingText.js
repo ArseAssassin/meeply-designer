@@ -3,7 +3,8 @@ let { measureSVGText } = require('utils/layoutUtils.js'),
 
 const
     FONT_FAMILY = '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif',
-    SPACE = '\u00A0'
+    SPACE = '\u00A0',
+    MARGIN = 30
 
 module.exports = memoizedFunction(
     ({ x, y, isInverted, children, height, width, helperClass, isBold, fontStyle, fontFamily, loadedFonts, ...props }) => {
@@ -11,7 +12,7 @@ module.exports = memoizedFunction(
             return null
         }
 
-        let availableWidth = isInverted ? height : width,
+        let availableWidth = (isInverted ? height : width) - MARGIN,
             ratio = !isInverted ? 0 : height - width,
             style = `font-size: ${props.style.fontSize}; font-style: ${fontStyle}; font-weight: ${isBold ? 'bold' : ''}; font-family: '${JSON.stringify(fontFamily || FONT_FAMILY)}';`,
             spaceWidth = measureSVGText(SPACE, helperClass, style)[0][0].width,

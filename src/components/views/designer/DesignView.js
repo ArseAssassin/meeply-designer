@@ -1,6 +1,4 @@
-let uuid = require('uuid/v4'),
-
-    TabBar = require('components/common/TabBar.js'),
+let TabBar = require('components/common/TabBar.js'),
     Modal = require('components/common/Modal.js'),
     FileExplorer = require('components/common/FileExplorer.js'),
     FileFace = require('components/common/FileFace.js'),

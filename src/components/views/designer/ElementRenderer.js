@@ -3,7 +3,8 @@ let WrappingText = require('components/common/WrappingText.js'),
 
     resourcesModel = require('model/resourcesModel.js'),
     { memoizedFunction } = require('utils/functionUtils.js'),
-    elementShapes = require('components/views/designer/elementShapes.js')
+    elementShapes = require('components/views/designer/elementShapes.js'),
+    { rgbToHex } = require('utils/colorUtils.js')
 
 
 const TEXT_ALIGN = {
@@ -67,23 +68,40 @@ let renderers = {
         'image': (it, _, fetchMode) =>
             <Image layer={ it } fetchMode={ fetchMode } />,
         'text': (it, loadedFonts) =>
-            <WrappingText
-                x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
-                y={ it.y }
-                transform={ getTransform(it) }
-                isInverted={ (it.rotation || 0) % 180 !== 0 }
-                helperClass=''
-                loadedFonts={ loadedFonts }
-                width={ it.width }
-                height={ it.height }
-                isBold={ it.isBold }
-                fontStyle={ it.fontStyle }
-                fontFamily={ it.fontFamily }
-                style={{ fontSize: it.fontSize + 'pt', fill: it.color }}
-                alignmentBaseline='hanging'
-                textAnchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
-                { it.body }
-            </WrappingText>,
+            <g>
+                <rect
+                    x={ it.x }
+                    y={ it.y }
+                    width={ it.width }
+                    height={ it.height }
+                    style={{
+                        fill:
+                            it.bgColor
+                              ? rgbToHex(it.bgColor)
+                              : undefined,
+                        fillOpacity:
+                            it.bgColor
+                                ? it.bgColor.a
+                                : 0
+                    }} />
+                <WrappingText
+                    x={ it.x + TEXT_ALIGN[it.textAlign || 'left'].position(it.width) }
+                    y={ it.y }
+                    transform={ getTransform(it) }
+                    isInverted={ (it.rotation || 0) % 180 !== 0 }
+                    helperClass=''
+                    loadedFonts={ loadedFonts }
+                    width={ it.width }
+                    height={ it.height }
+                    isBold={ it.isBold }
+                    fontStyle={ it.fontStyle }
+                    fontFamily={ it.fontFamily }
+                    style={{ fontSize: it.fontSize + 'pt', fill: it.color }}
+                    alignmentBaseline='hanging'
+                    textAnchor={ TEXT_ALIGN[it.textAlign || 'left'].anchor }>
+                    { it.body }
+                </WrappingText>
+            </g>,
         '': (it) => <text>?</text>
     },
     points = [
@@ -262,7 +280,7 @@ module.exports = switchboard.component(
             elementId: kefir.constant(Math.random().toString())
         }
     },
-    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y, fetchMode='normal' }) =>
+    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, showCutlines=true, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y, fetchMode='normal' }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
              width={ useExactSize ? element.width : '100%'}
@@ -287,7 +305,7 @@ module.exports = switchboard.component(
             { showDocument && viewBox && elementShapes[element.shape || 'rect'](element) }
             { r.contains(sides, words('both back')) && showDocument && viewBox && <g>
                 { elementShapes[element.shape || 'rect'](element, 'element-view__canvas', true) }
-                <text className='element-view__card-title' x='-30' y='-10' textAnchor='end'>Back</text>
+                <text data-is-loaded='true' className='element-view__card-title' x='-30' y='-10' textAnchor='end'>Back</text>
             </g> }
 
             <g clipPath={ !interactive && `url(#${elementId})` }>
@@ -298,7 +316,8 @@ module.exports = switchboard.component(
                 ) }
             </g>
 
-            { showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline') }
+            { showDocument && viewBox && showCutlines && elementShapes[element.shape || 'rect'](element, 'element-view__outline') }
+
             { r.contains(sides, words('both back')) && showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline', true) }
         </svg>
 )

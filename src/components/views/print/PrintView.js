@@ -275,7 +275,8 @@ module.exports = switchboard.component(
                                         sides={ it.isBack ? 'back' : 'front' }
                                         key={ it.id }
                                         useExactSize
-                                        showDocument={ showCutlines }
+                                        showDocument
+                                        showCutlines={ showCutlines }
                                         element={ it }
                                         realTime
                                         style={{ width: it.width / DEFAULT_PPI + 'in', height: it.height / DEFAULT_PPI + 'in' }}

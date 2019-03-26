@@ -34,13 +34,12 @@
 
 .element-view__canvas
     fill $white
-    stroke darken($grey, 15%)
-    stroke-width 2px
 
 .element-view__outline
     stroke darken($grey, 15%)
     stroke-width 2px
     fill transparent
+    fill-opacity 0
     pointer-events none
 
 .element-view__toolbar
@@ -211,4 +210,5 @@
     outline none
 
 .element-view__layer-form
+    width 100%
     overflow-y auto

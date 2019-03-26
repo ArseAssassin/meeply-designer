@@ -40,7 +40,7 @@ let getLayer = (layer, layers) =>
                         defaultValue: '',
                         validator: required()
                     }
-                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape showBack')))).map((it) => ({ ...it, body: it.body || undefined }))
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape showBack bgColor')))).map((it) => ({ ...it, body: it.body || undefined, bgColor: it.bgColor || undefined }))
                 )(rest),
                 ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
                 imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
@@ -175,6 +175,14 @@ let getLayer = (layer, layers) =>
                                 </FormField>)}
                             </HGroup>
 
+                            {capture(<FormField.Basic name='bgColor'>
+                                <Input.Color
+                                    width={ 180 }
+                                    key='textBg'
+                                    label='BG'
+                                    defaultValue='transparent' />
+                            </FormField.Basic>)}
+
                             <HGroup modifiers='margin-s'>
                                 { words('left center right').map((it) =>
                                     <button
@@ -239,6 +247,17 @@ let getLayer = (layer, layers) =>
                     { !layer.type && capture(<FormField.Checkbox name='showBack'>
                         <Input.Checkbox label='Show card back' disabled={ layer.template } />
                     </FormField.Checkbox>) }
+
+                    { !layer.type &&
+                        capture(<FormField.Basic name='bgColor'>
+                            <Input.Color
+                                key='documentbg'
+                                width={ 180 }
+                                disableAlpha
+                                label='BG'
+                                defaultValue='#ffffff' />
+                        </FormField.Basic>)
+                    }
                 </VGroup>
             </div>
     )
