@@ -52,15 +52,20 @@ let getTransform = ({ rotation, mirror, x, y, width, height }) => [
                     )
 
                 )
-
-            )
+            ),
+            isValid:
+                propsProperty
+                .map(r.path(words('layer body')))
+                .thru(resourcesModel.images.getById)
+                .map(Boolean)
 
         }),
-        ({ wiredState: { href }, layer }) =>
+        ({ wiredState: { isValid, href }, layer }) =>
             <image
                 href={ href }
                 transform={ getTransform(layer) }
                 data-is-loaded={ Boolean(href) }
+                data-is-valid={ isValid }
                 {...r.pick(words('x y width height'), layer) } />,
     )
 
@@ -280,11 +285,11 @@ module.exports = switchboard.component(
             elementId: kefir.constant(Math.random().toString())
         }
     },
-    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, showCutlines=true, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y, fetchMode='normal' }) =>
+    ({ wiredState: { elementId, loadedFonts }, wire, sides, element, _ref, selectedLayer, viewBox, showDocument, showCutlines=true, onClick, onLayerInteract, onMouseDown, onMouseWheel, modifiers, zoomLevel, style, interactive, useExactSize=false, x, y, fetchMode='normal', width, height }) =>
         <svg className={ modifiersToClass('element', modifiers) }
              viewBox={ viewBox || undefined }
-             width={ useExactSize ? element.width : '100%'}
-             height={ useExactSize ? element.height : '100%'}
+             width={ width || '100%'}
+             height={ height || '100%'}
              xmlns='http://www.w3.org/2000/svg'
              onMouseDown={ interactive && r.pipe(r.tap(wire('click.start')), onMouseDown || Boolean) }
              onWheel={ onMouseWheel }

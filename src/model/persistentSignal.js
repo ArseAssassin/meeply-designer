@@ -6,7 +6,13 @@ module.exports = (signal) => (name, initialValue, ...rest) => {
                 : initialValue,
 
             ...rest
-        ).onValue((it) => localStorage.setItem(name, JSON.stringify(it)))
+        ).onValue((it) => {
+            try {
+                localStorage.setItem(name, JSON.stringify(it))
+            } catch (e) {
+
+            }
+        })
     } else {
         return signal(initialValue, ...rest)
     }

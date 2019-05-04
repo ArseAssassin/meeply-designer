@@ -1,5 +1,7 @@
 let JSZip = require('jszip'),
 
+    { DEFAULT_PPI } = require('constants/units.js'),
+
     gameModel = require('model/gameModel.js'),
     ElementRenderer = require('components/views/designer/ElementRenderer.js'),
     fileUtils = require('utils/fileUtils.js'),
@@ -16,7 +18,7 @@ let PrintedElement = switchboard.component(
                 .flatMapLatest((it) =>
                     kefir.fromPoll(100, () =>
                         r.all(
-                            (it) => it.getAttribute('data-is-loaded') === 'true',
+                            (it) => it.getAttribute('data-is-loaded') === 'true' || it.getAttribute('data-is-valid') === 'false',
                             Array.from(it.querySelectorAll('image, text'))
                         )
                     )
@@ -58,9 +60,12 @@ let PrintedElement = switchboard.component(
 
         return {}
     },
-    ({ element, wire, isBack }) =>
-        <div>
-            <canvas width={ element.width } height={ element.height } ref={ wire('canvas.ref') } style={{ width: element.width + 'px', height: element.height + 'px'}}>
+    ({ element, wire, isBack }) => {
+        let width = (element.width / DEFAULT_PPI) * 300,
+            height = (element.height / DEFAULT_PPI) * 300
+
+        return <div>
+            <canvas width={ width } height={ height } ref={ wire('canvas.ref') } style={{ width: width + 'px', height: height + 'px'}}>
             </canvas>
 
             <div>
@@ -70,11 +75,14 @@ let PrintedElement = switchboard.component(
                     showCutlines={ false }
                     showDocument
                     useExactSize
+                    width={ width }
+                    height={ height }
                     fetchMode='inline'
                     element={ element }
                     viewBox={ `${ isBack ? -element.width - 20 : 0 } 0 ${ element.width } ${ element.height }` } />
             </div>
         </div>
+    }
 )
 
 module.exports = switchboard.component(
