@@ -451,6 +451,16 @@ module.exports = switchboard.component(
         .to(gameModel.elements.addLayer)
 
         kefir.combine([
+            kefir.combine(
+                [slot('layers.duplicate')],
+                [selectedLayer, layers]
+            )
+            .map(([_, layerId, layers]) => r.find(r.propEq('id', layerId), layers))
+            .map((it) => ({ ...it, id: uuid(), x: it.x + 10, y: it.y + 10 }))
+        ], [elementId])
+        .to(gameModel.elements.addLayer)
+
+        kefir.combine([
             slot('layers.text.add')
             .map(() => ({
                 body: 'Type your text here',
@@ -696,6 +706,13 @@ module.exports = switchboard.component(
                                             <Icon name='type' />
                                             <Icon name='plus' />
                                         </HGroup>
+                                    </button>
+
+                                    <button
+                                        className='element-view__add-layer'
+                                        disabled={ selectedLayer === DOCUMENT }
+                                        onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.duplicate') }>
+                                        <Icon name='copy' />
                                     </button>
                                 </HGroup>
 
