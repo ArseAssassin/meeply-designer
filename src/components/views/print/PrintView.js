@@ -64,15 +64,35 @@ module.exports = switchboard.component(
                 r.unnest,
                 r.groupBy((it) => it.width + '-' + it.height),
                 r.mapObjIndexed((it) => {
-                    let { width, height } = it[0],
+                    let calculateNumberOfElements = (availableWidth, availableHeight, requiredWidth, requiredHeight) =>
+                            [Math.max(1, availableWidth / requiredWidth),
+                             Math.max(1, availableHeight / requiredHeight)],
+
+                        { width, height } = it[0],
                         requiredWidth = cardBackMode === 'fold' ? width * 2 : width,
                         actualCanvasWidth = canvasWidth - pageMargin * 2,
                         actualCanvasHeight = canvasHeight - pageMargin * 2,
-                        hElements = Math.floor(actualCanvasWidth / requiredWidth),
-                        vElements = Math.floor(actualCanvasHeight / height),
+                        layoutStyles = [
+                            calculateNumberOfElements(
+                                actualCanvasWidth,
+                                actualCanvasHeight,
+                                requiredWidth,
+                                height
+                            ),
+                            calculateNumberOfElements(
+                                actualCanvasWidth,
+                                actualCanvasHeight,
+                                height,
+                                requiredWidth
+                            )
+                        ],
+
+                        rotate = r.multiply(...layoutStyles[0]) > r.multiply(...layoutStyles[1]),
+                        [hElements, vElements] = (rotate ? layoutStyles[1] : layoutStyles[0]).map(Math.floor),
                         allowedElements = hElements * vElements,
-                        elementMarginWidth = (actualCanvasWidth - hElements * requiredWidth) / Math.max(1, hElements - 1) + requiredWidth,
-                        elementMarginHeight = (actualCanvasHeight - vElements * height) / Math.max(1, vElements - 1) + height
+                        [renderedWidth, renderedHeight] = rotate ? [height, requiredWidth] : [requiredWidth, height],
+                        elementMarginWidth = (actualCanvasWidth - hElements * renderedWidth) / Math.max(1, hElements - 1) + renderedWidth,
+                        elementMarginHeight = (actualCanvasHeight - vElements * renderedHeight) / Math.max(1, vElements - 1) + renderedHeight
 
                     return threadLast(it)(
                         r.splitEvery(allowedElements),
@@ -82,6 +102,9 @@ module.exports = switchboard.component(
                                     ...it,
                                     x: pageMargin + (idx % hElements) * elementMarginWidth,
                                     y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight,
+                                    renderedWidth,
+                                    renderedHeight,
+                                    rotate,
                                     disabledGuides:
                                         cardBackMode === 'fold'
                                             ? ['ne', 'se']
@@ -92,6 +115,7 @@ module.exports = switchboard.component(
                                         ...it,
                                         x: pageMargin + (idx % hElements) * elementMarginWidth + width,
                                         y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight,
+                                        rotate,
                                         isBack: true,
                                         disabledGuides: ['nw', 'sw']
                                     }
@@ -240,12 +264,12 @@ module.exports = switchboard.component(
                         <svg viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} width={ canvasWidth } height={ canvasHeight } key={ size + Math.random() } className='print__page'>
                             {page.map((it) => {
                                 let left = it.x,
-                                    lefter = Math.max(0, ...page.map((it) => it.x + it.width).filter((it) => it < left)),
+                                    lefter = Math.max(0, ...page.map((it) => it.x + it.renderedWidth).filter((it) => it < left)),
                                     top = it.y,
-                                    topper = Math.max(0, ...page.map((it) => it.y + it.height).filter((it) => it < top)),
-                                    right = it.x + it.width,
+                                    topper = Math.max(0, ...page.map((it) => it.y + it.renderedHeight).filter((it) => it < top)),
+                                    right = it.x + it.renderedWidth,
                                     righter = Math.min(canvasWidth, ...page.map((it) => it.x).filter((it) => it > right)),
-                                    bottom = it.y + it.height,
+                                    bottom = it.y + it.renderedHeight,
                                     bottomer = Math.min(canvasHeight, ...page.map((it) => it.y).filter((it) => it > bottom)),
                                     disabledGuides = {
                                         nw: [left, top],
@@ -269,18 +293,24 @@ module.exports = switchboard.component(
                                                 points={ r.splitEvery(2, it).map((it) => it.join(',')).join(' ') } />
                                     ) }
 
-                                    <ElementRenderer
-                                        x={ it.x }
-                                        y={ it.y }
-                                        sides={ it.isBack ? 'back' : 'front' }
-                                        key={ it.id }
-                                        useExactSize
-                                        showDocument
-                                        showCutlines={ showCutlines }
-                                        element={ it }
-                                        realTime
-                                        style={{ width: it.width / DEFAULT_PPI + 'in', height: it.height / DEFAULT_PPI + 'in' }}
-                                        viewBox={ `${ it.isBack ? -it.width - 20 : 0 } 0 ${ it.width } ${ it.height }`} />
+                                    <g style={
+                                        it.rotate
+                                          ? { transform: `translate(${it.x}px, ${it.y}px) rotate(90deg) translateY(-${it.renderedWidth}px)` } 
+                                          : { transform: `translate(${it.x}px, ${it.y}px)`} }>
+                                        <ElementRenderer
+                                            x={ 0 }
+                                            y={ 0 }
+                                            sides={ it.isBack ? 'back' : 'front' }
+                                            key={ it.id }
+                                            width={ it.width }
+                                            height={ it.height }
+                                            showDocument
+                                            showCutlines={ showCutlines }
+                                            element={ it }
+                                            realTime
+                                            style={{ width: it.width / DEFAULT_PPI + 'in', height: it.height / DEFAULT_PPI + 'in' }}
+                                            viewBox={ `${ it.isBack ? -it.width - 20 : 0 } 0 ${ it.width } ${ it.height }`} />
+                                    </g>
                                 </g>
                             })}
                         </svg>
