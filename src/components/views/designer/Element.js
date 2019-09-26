@@ -10,6 +10,7 @@ let uuid = require('uuid/v4'),
     gameModel = require('model/gameModel.js'),
     persistentSignal = require('model/persistentSignal.js'),
     Deck = require('components/views/designer/Deck.js'),
+    ContextMenu = require('components/common/ContextMenu.jsx'),
 
     componentForm = require('wireState/componentForm.js'),
     saveTabState = require('wireState/saveTabState.js'),
@@ -693,23 +694,32 @@ module.exports = switchboard.component(
                         <VGroup data-group-modifiers='grow' modifiers='grow'>
                             <HGroup modifiers='justify-space-between align-center'>
                                 <HGroup modifiers='margin-xs'>
-                                    <button
-                                        className='element-view__add-layer'
-                                        onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.image.add') }>
-                                        <HGroup modifiers='margin-xs'>
-                                            <Icon name='image' />
+                                    <ContextMenu>
+                                        <button
+                                            className='element-view__add-layer'>
                                             <Icon name='plus' />
-                                        </HGroup>
-                                    </button>
+                                        </button>
 
-                                    <button
-                                        className='element-view__add-layer'
-                                        onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
-                                        <HGroup modifiers='margin-xs'>
-                                            <Icon name='type' />
-                                            <Icon name='plus' />
-                                        </HGroup>
-                                    </button>
+                                        <button
+                                            className='element-view__add-layer'
+                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.image.add') }>
+                                            <HGroup modifiers='margin-xs'>
+                                                <Icon name='image' />
+                                                <Icon name='plus' />
+                                            </HGroup>
+                                        </button>
+
+                                        <button
+                                            className='element-view__add-layer'
+                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
+                                            <HGroup modifiers='margin-xs'>
+                                                <Icon name='type' />
+                                                <Icon name='plus' />
+                                            </HGroup>
+                                        </button>
+                                    </ContextMenu>
+
+
 
                                     <button
                                         className='element-view__add-layer'
