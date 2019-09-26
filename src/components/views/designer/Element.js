@@ -741,18 +741,18 @@ module.exports = switchboard.component(
 
                                         <button
                                             className='element-view__add-layer'
-                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.image.add') }>
+                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
                                             <HGroup modifiers='margin-xs'>
-                                                <Icon name='image' />
+                                                <Icon name='type' />
                                                 <Icon name='plus' />
                                             </HGroup>
                                         </button>
 
                                         <button
                                             className='element-view__add-layer'
-                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
+                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.image.add') }>
                                             <HGroup modifiers='margin-xs'>
-                                                <Icon name='type' />
+                                                <Icon name='image' />
                                                 <Icon name='plus' />
                                             </HGroup>
                                         </button>
