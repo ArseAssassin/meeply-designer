@@ -62,10 +62,13 @@ let getLayer = (layer, layers) =>
                 .debounce(100)
                 .flatMap((type) =>
                     type === 'text'
-                    ? ref.debounce(100).take(1).map((it) => () =>
-                        setTimeout(() => it.focus(), 100)
-                    )
-                    : imageFocus.debounce(100).filter(Boolean).take(1)
+                      ? ref.debounce(100).take(1).map((it) => () =>
+                            setTimeout(() => {
+                                it.focus()
+                                it.select()
+                            }, 100)
+                        )
+                      : imageFocus.debounce(100).filter(Boolean).take(1)
                 )
                 .take(1)
             )
