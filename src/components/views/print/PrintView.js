@@ -90,7 +90,7 @@ module.exports = switchboard.component(
                         rotate = r.multiply(...layoutStyles[0]) > r.multiply(...layoutStyles[1]),
                         [hElements, vElements] = (rotate ? layoutStyles[1] : layoutStyles[0]).map(Math.floor),
                         allowedElements = hElements * vElements,
-                        [renderedWidth, renderedHeight] = rotate ? [height, requiredWidth] : [requiredWidth, height],
+                        [renderedWidth, renderedHeight] = rotate ? [height, width] : [width, height],
                         elementMarginWidth = (actualCanvasWidth - hElements * renderedWidth) / Math.max(1, hElements - 1) + renderedWidth,
                         elementMarginHeight = (actualCanvasHeight - vElements * renderedHeight) / Math.max(1, vElements - 1) + renderedHeight
 
@@ -113,8 +113,10 @@ module.exports = switchboard.component(
                                 cardBackMode === 'fold'
                                   ? {
                                         ...it,
-                                        x: pageMargin + (idx % hElements) * elementMarginWidth + width,
+                                        x: pageMargin + (idx % hElements) * elementMarginWidth + renderedWidth,
                                         y: pageMargin + (Math.floor(idx / hElements)) * elementMarginHeight,
+                                        renderedWidth,
+                                        renderedHeight,
                                         rotate,
                                         isBack: true,
                                         disabledGuides: ['nw', 'sw']
@@ -129,7 +131,7 @@ module.exports = switchboard.component(
                                         r.map((it) => ({
                                             ...it,
                                             x: cardBackMode === 'duplex'
-                                                ? it.x * -1 - it.width + canvasWidth
+                                                ? it.x * -1 - it.renderedWidth + canvasWidth
                                                 : it.x,
                                             isBack: true
                                         }))
@@ -260,6 +262,7 @@ module.exports = switchboard.component(
 
             <div id='print'>
                 { threadLast(pages)(
+                    log,
                     r.addIndex(r.map)(([size, pages], idx) => pages.map((page) =>
                         <svg viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} width={ canvasWidth } height={ canvasHeight } key={ size + Math.random() } className='print__page'>
                             {page.map((it) => {

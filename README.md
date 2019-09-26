@@ -2,7 +2,7 @@
 
 Meeply Designer helps you turn your board game idea into a printable prototype without spreadsheets or programming. It's designed for quick prototyping and iteration, allowing you to rapidly test new ideas with tools of your choice.
 
-[Click here](https://meeply.net/) to test Meeply Designer in your browser
+[Test Meeply Designer in your browser](https://meeply.net/)
 
 ## Features
 

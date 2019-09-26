@@ -353,6 +353,9 @@ module.exports = switchboard.component(
 
             { showDocument && viewBox && showCutlines && elementShapes[element.shape || 'rect'](element, 'element-view__outline') }
 
-            { r.contains(sides, words('both back')) && showDocument && viewBox && interactive && elementShapes[element.shape || 'rect'](element, 'element-view__outline', true) }
+            { r.contains(sides, words('both back')) &&
+              showDocument &&
+              viewBox &&
+              elementShapes[element.shape || 'rect'](element, 'element-view__outline', true) }
         </svg>
 )
