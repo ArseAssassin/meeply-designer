@@ -215,6 +215,7 @@ let defaultLayer = () => ({
                                 <Input.Select>
                                     <option value='rectangle'>Rectangle</option>
                                     <option value='circle'>Circle</option>
+                                    <option value='hexagon'>Hexagon</option>
                                 </Input.Select>
                             </FormField>)}
 

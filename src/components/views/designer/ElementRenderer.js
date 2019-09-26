@@ -4,7 +4,8 @@ let WrappingText = require('components/common/WrappingText.js'),
     resourcesModel = require('model/resourcesModel.js'),
     { memoizedFunction } = require('utils/functionUtils.js'),
     elementShapes = require('components/views/designer/elementShapes.js'),
-    { rgbToHex } = require('utils/colorUtils.js')
+    { rgbToHex } = require('utils/colorUtils.js'),
+    { hexagon } = require('utils/geometryUtils.js')
 
 
 const TEXT_ALIGN = {
@@ -24,6 +25,12 @@ let renderRGBA = (color) =>
         circle: {
             element: 'ellipse',
             props: (it) => ({ cx: it.x + it.width / 2, cy: it.y + it.height / 2, rx: it.width / 2, ry: it.height / 2 })
+        },
+        hexagon: {
+            element: 'polygon',
+            props: (it) => ({
+                points: hexagon(it.x, it.y, it.width, it.height).map(r.join(',')).join(' ')
+            })
         }
     },
 
