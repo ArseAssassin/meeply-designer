@@ -93,40 +93,6 @@ let defaultLayer = () => ({
         ({ wiredState: { capture }, wire, layer, isSlave }) =>
             <div className='element-view__layer-form'>
                 <VGroup>
-                    {layer.type === 'text' && <HGroup modifiers='margin-xs'>
-                        <button
-                            className='element-view__tool'
-                            onClick={ r.pipe(
-                                r.always({ isBold: !layer.isBold }),
-                                wire('componentForm.update')
-                            ) }>
-                            <Icon name='bold' />
-                        </button>
-
-                        <button
-                            className='element-view__tool'
-                            onClick={ r.pipe(
-                                r.always({ fontStyle: layer.fontStyle === 'italic' ? undefined : 'italic' }),
-                                wire('componentForm.update')
-                            ) }>
-                            <Icon name='italic' />
-                        </button>
-                    </HGroup>}
-
-                    {layer.type === 'text' && capture(<FormField name='body'>
-                        <Input.Textarea _ref={ wire('ref') } />
-                    </FormField>)}
-
-                    { layer.type === 'image' &&
-                        capture(<FormField.Basic name='body'>
-                            <FileBrowser
-                                autoOpen
-                                onImageFocus={ wire('imageFocus.set') }
-                                id={ layer.id }
-                                type='image' />
-                        </FormField.Basic>)
-                    }
-
                     { layer.type
                         ? capture(<FormField name='name'>
                             <Input.Text label='Layer name' disabled={ isSlave } />
@@ -169,7 +135,11 @@ let defaultLayer = () => ({
                     </HGroup>
 
                     { layer.type === 'text' &&
-                        <VGroup>
+                        <VGroup modifiers='margin-s'>
+                            {capture(<FormField name='body'>
+                                <Input.Textarea modifiers='grow' _ref={ wire('ref') } />
+                            </FormField>)}
+
                             <HGroup modifiers='align-center'>
                                 <Icon name='type' />
                                 {capture(<FormField.Basic name='fontFamily'>
@@ -202,8 +172,42 @@ let defaultLayer = () => ({
                                     </button>
                                 )}
                             </HGroup>
-                        </VGroup>
+
+                            <HGroup modifiers='margin-xs'>
+                                <button
+                                    className='element-view__tool'
+                                    onClick={ r.pipe(
+                                        r.always({ isBold: !layer.isBold }),
+                                        wire('componentForm.update')
+                                    ) }>
+                                    <Icon name='bold' />
+                                </button>
+
+                                <button
+                                    className='element-view__tool'
+                                    onClick={ r.pipe(
+                                        r.always({ fontStyle: layer.fontStyle === 'italic' ? undefined : 'italic' }),
+                                        wire('componentForm.update')
+                                    ) }>
+                                    <Icon name='italic' />
+                                </button>
+                            </HGroup>
+
+
+
+                        </VGroup> }
+
+                    { layer.type === 'image' &&
+                        capture(<FormField.Basic name='body'>
+                            <FileBrowser
+                                autoOpen
+                                onImageFocus={ wire('imageFocus.set') }
+                                id={ layer.id }
+                                type='image' />
+                        </FormField.Basic>)
                     }
+
+
 
                     { layer.type === 'shape' &&
                         <VGroup>
