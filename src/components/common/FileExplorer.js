@@ -166,7 +166,7 @@ module.exports = switchboard.component(
             path
         })
     },
-    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled, onSelectedRef }) => {
+    ({ wiredState: { path, shownItems, isDeleting, isEditing, selected, search, selectedComponent }, wire, rootName, children, hideBreadcrumbs, onChange, modifiers, preview, toolbarEnabled, canDelete, searchEnabled, onSelectedRef, advancedSearch }) => {
         let isSearching = search.trim().length > 0,
             contents =
                 !isSearching
@@ -224,12 +224,15 @@ module.exports = switchboard.component(
 
                     { searchEnabled &&
                         <label>
-                            <HGroup modifiers='margin-s align-center'>
+                            <HGroup modifiers='margin-s'>
                                 <Icon name='zoom' modifiers='m' />
-                                <Input.Text
-                                    placeholder='Search'
-                                    defaultValue={ search }
-                                    onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
+                                <VGroup modifiers='margin-none'>
+                                    <Input.Text
+                                        placeholder='Search'
+                                        defaultValue={ search }
+                                        onChange={ r.pipe(r.path(words('target value')), wire('search.set')) } />
+                                    { advancedSearch && <Type modifiers='xxs'><a target='_blank' rel="noopener noreferrer" href={ advancedSearch }>Advanced search</a></Type> }
+                                </VGroup>
                             </HGroup>
                         </label>
                     }

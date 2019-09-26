@@ -147,7 +147,7 @@ module.exports = switchboard.component(
             chosenImage
         })
     },
-    ({ wiredState: { save, chosenImage, resourceName, usedImages, userImages, libraryImages, isOpen }, wire, value, onChange, type }) => {
+    ({ wiredState: { save, chosenImage, resourceName, usedImages, userImages, libraryImages, isOpen }, wire, value, onChange, type, advancedSearch }) => {
         return <VGroup modifiers='margin-s'>
             <div onClick={ wire('toggle') }>
                 <VGroup modifiers='margin-s'>
@@ -170,6 +170,7 @@ module.exports = switchboard.component(
                                 rootName={ <Icon name='home' modifiers='s' /> }
                                 modifiers='icon-xs'
                                 searchEnabled
+                                advancedSearch={ advancedSearch }
                                 preview={
                                     <div className='file-browser__preview' data-group-modifiers='align-center'>
                                         { chosenImage.id !== undefined

@@ -203,6 +203,7 @@ let defaultLayer = () => ({
                                 autoOpen
                                 onImageFocus={ wire('imageFocus.set') }
                                 id={ layer.id }
+                                advancedSearch='https://game-icons.net/'
                                 type='image' />
                         </FormField.Basic>)
                     }
