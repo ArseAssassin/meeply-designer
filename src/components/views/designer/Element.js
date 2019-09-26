@@ -719,8 +719,6 @@ module.exports = switchboard.component(
                                         </button>
                                     </ContextMenu>
 
-
-
                                     <button
                                         className='element-view__add-layer'
                                         disabled={ selectedLayer === DOCUMENT }

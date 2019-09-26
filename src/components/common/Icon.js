@@ -43,6 +43,7 @@ let icons = {
     'mirror-h': require('./../../../node_modules/feather-icons/dist/icons/refresh-ccw.svg'),
     'chevron-down': require('./../../../node_modules/feather-icons/dist/icons/chevron-down.svg'),
     'chevron-up': require('./../../../node_modules/feather-icons/dist/icons/chevron-up.svg'),
+    'hex': require('./../../../node_modules/feather-icons/dist/icons/hexagon.svg'),
     'mirror-v': require('./mirror-v.svg'),
     key: require('./key.svg')
 }
