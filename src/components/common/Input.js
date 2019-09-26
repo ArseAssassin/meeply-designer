@@ -62,13 +62,13 @@ module.exports = {
                     </HGroup>
                 </Button>
 
-                { isOpen &&
-                    <div style={{ marginLeft: '1px', marginBottom: '1px' }}>
+                <div style={{ marginLeft: '1px', marginBottom: '1px', position: 'absolute', zIndex: 10 }}>
+                    { isOpen &&
                         <Color.SketchPicker
                             onChange={ (it) => onChange(it.rgb) }
                             color={ value || defaultValue }
-                            { ...rest } />
-                    </div> }
+                            { ...rest } /> }
+                </div>
             </VGroup>
     )
 }

@@ -17,7 +17,6 @@ module.exports = switchboard.component(
                 .takeWhile(Boolean)
                 .beforeEnd(r.F)
             )
-            .log()
         ),
         origin: signal(
             { left: 0, top: 0 },

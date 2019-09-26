@@ -13,7 +13,21 @@ const TEXT_ALIGN = {
     right: { anchor: 'end', position: (it) => it / 2 }
 }
 
-let getTransform = ({ rotation, mirror, x, y, width, height }) => [
+let renderRGBA = (color) =>
+        `rgba(${ 'rgba'.split('').map((channel) => color[channel]).join(', ')})`,
+
+    shapes = {
+        rectangle: {
+            element: 'rect',
+            props: (it) => ({ x: it.x, y: it.y, width: it.width, height: it.height })
+        },
+        circle: {
+            element: 'ellipse',
+            props: (it) => ({ cx: it.x + it.width / 2, cy: it.y + it.height / 2, rx: it.width / 2, ry: it.height / 2 })
+        }
+    },
+
+    getTransform = ({ rotation, mirror, x, y, width, height }) => [
         rotation && `rotate(${rotation} ${ x + width / 2 } ${ y + height / 2 })`,
         mirror && `translate(${ x * 2 + parseInt(width) } 0) scale(-1 1)`
     ].filter(Boolean).join(' '),
@@ -107,6 +121,15 @@ let renderers = {
                     { it.body }
                 </WrappingText>
             </g>,
+        'shape': (it) =>
+            React.createElement(
+                shapes[it.body].element, {
+                    stroke: renderRGBA(it.strokeColor),
+                    strokeWidth: it.strokeWidth,
+                    fill: renderRGBA(it.bgColor),
+                    ...shapes[it.body].props(it)
+                }
+            ),
         '': (it) => <text>?</text>
     },
     points = [

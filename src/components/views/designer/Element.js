@@ -19,7 +19,20 @@ let uuid = require('uuid/v4'),
 
 require('./element.styl')
 
-let getLayer = (layer, layers) =>
+
+
+let defaultLayer = () => ({
+        hidden: false,
+        width: 180,
+        height: 100,
+        body: undefined,
+        x: 0,
+        y: 0,
+        rotation: 0,
+        mirror: false,
+        id: uuid()
+    }),
+    getLayer = (layer, layers) =>
         r.find(r.propEq('id', layer), layers),
 
     adjustRotation = (rotation, delta) => ((rotation || 0) + delta + 360) % 360,
@@ -41,7 +54,7 @@ let getLayer = (layer, layers) =>
                         defaultValue: '',
                         validator: required()
                     }
-                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape showBack bgColor')))).map((it) => ({ ...it, body: it.body || undefined, bgColor: it.bgColor || undefined }))
+                }, propsProperty.map(r.pipe(r.prop('layer'), r.pick(words('x y name width height body fontSize fontFamily color shape showBack strokeColor bgColor strokeWidth')))).map((it) => ({ ...it, body: it.body || undefined, bgColor: it.bgColor || undefined }))
                 )(rest),
                 ref = slot('ref').filter(Boolean).toProperty().onValue(Boolean),
                 imageFocus = slot('imageFocus.set').toProperty().onValue(Boolean)
@@ -179,14 +192,6 @@ let getLayer = (layer, layers) =>
                                 </FormField>)}
                             </HGroup>
 
-                            {capture(<FormField.Basic name='bgColor'>
-                                <Input.Color
-                                    width={ 180 }
-                                    key='textBg'
-                                    label='BG'
-                                    defaultValue='transparent' />
-                            </FormField.Basic>)}
-
                             <HGroup modifiers='margin-s'>
                                 { words('left center right').map((it) =>
                                     <button
@@ -196,6 +201,40 @@ let getLayer = (layer, layers) =>
                                         <Icon name={ `align-${it}` } />
                                     </button>
                                 )}
+                            </HGroup>
+                        </VGroup>
+                    }
+
+                    { layer.type === 'shape' &&
+                        <VGroup>
+                            {capture(<FormField name='body'>
+                                <Input.Select>
+                                    <option value='rectangle'>Rectangle</option>
+                                    <option value='circle'>Circle</option>
+                                </Input.Select>
+                            </FormField>)}
+
+                            {capture(<FormField.Basic name='bgColor'>
+                                <Input.Color
+                                    width={ 180 }
+                                    label='Background color'
+                                    defaultValue='transparent' />
+                            </FormField.Basic>)}
+
+                            <HGroup modifiers='align-center'>
+                                {capture(<FormField.Basic name='strokeColor'>
+                                    <Input.Color
+                                        width={ 180 }
+                                        label='Stroke'
+                                        defaultValue='transparent' />
+                                </FormField.Basic>)}
+
+                                <HGroup modifiers='margin-xs align-center'>
+                                    { capture(<FormField name='strokeWidth' reducer={ parseInt }>
+                                        <Input.Number modifiers='number' />
+                                    </FormField>) }
+                                    pt
+                                </HGroup>
                             </HGroup>
                         </VGroup>
                     }
@@ -258,7 +297,7 @@ let getLayer = (layer, layers) =>
                                 key='documentbg'
                                 width={ 180 }
                                 disableAlpha
-                                label='BG'
+                                label='Background color'
                                 defaultValue='#ffffff' />
                         </FormField.Basic>)
                     }
@@ -270,7 +309,8 @@ const
     LAYER_ICONS = {
         document: 'file',
         image: 'image',
-        text: 'type'
+        text: 'type',
+        shape: 'hex'
     },
     DOCUMENT = 'document'
 
@@ -439,17 +479,23 @@ module.exports = switchboard.component(
         kefir.combine([
             slot('layers.image.add')
             .map((event) => ({
+                ...defaultLayer(),
                 type: 'image',
-                name: 'Image',
-                hidden: false,
-                width: 180,
-                height: 100,
-                body: undefined,
-                x: 0,
-                y: 0,
-                rotation: 0,
-                mirror: false,
-                id: uuid()
+                name: 'Image'
+            }))
+        ], [elementId])
+        .to(gameModel.elements.addLayer)
+
+        kefir.combine([
+            slot('layers.shape.add')
+            .map((event) => ({
+                ...defaultLayer(),
+                type: 'shape',
+                name: 'Shape',
+                body: 'rectangle',
+                bgColor: { r: 255, g: 255, b: 255, a: 1 },
+                strokeColor: { r: 0, g: 0, b: 0, a: 1 },
+                strokeWidth: 2
             }))
         ], [elementId])
         .to(gameModel.elements.addLayer)
@@ -467,22 +513,15 @@ module.exports = switchboard.component(
         kefir.combine([
             slot('layers.text.add')
             .map(() => ({
+                ...defaultLayer(),
                 body: 'Type your text here',
-                width: 180,
-                height: 100,
                 type: 'text',
                 name: 'Text',
-                hidden: false,
                 textAlign: 'center',
                 fontSize: 12,
                 fontStyle: undefined,
                 fontFamily: '',
-                isBold: false,
-                x: 0,
-                y: 0,
-                rotation: 0,
-                mirror: false,
-                id: uuid()
+                isBold: false
             }))
         ], [elementId])
         .to(gameModel.elements.addLayer)
@@ -714,6 +753,15 @@ module.exports = switchboard.component(
                                             onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.text.add') }>
                                             <HGroup modifiers='margin-xs'>
                                                 <Icon name='type' />
+                                                <Icon name='plus' />
+                                            </HGroup>
+                                        </button>
+
+                                        <button
+                                            className='element-view__add-layer'
+                                            onClick={ wire(element.template ? 'templateWarning.toggle' : 'layers.shape.add') }>
+                                            <HGroup modifiers='margin-xs'>
+                                                <Icon name='hex' />
                                                 <Icon name='plus' />
                                             </HGroup>
                                         </button>
