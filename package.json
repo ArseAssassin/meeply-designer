@@ -25,7 +25,7 @@
     "eslint-plugin-jsx-a11y": "6.1.2",
     "eslint-plugin-react": "7.11.1",
     "fast-levenshtein": "2.0.6",
-    "feather-icons": "^4.10.0",
+    "feather-icons": "^4.28.0",
     "file-loader": "2.0.0",
     "file-saver": "2.0.0",
     "fork-ts-checker-webpack-plugin-alt": "0.4.14",
@@ -123,5 +123,5 @@
     "stylus-loader": "3.0.2",
     "valivali": "2.0.2"
   },
-  "homepage": "http://meeply.net/"
+  "homepage": "http://meeply.github.io/"
 }
