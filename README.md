@@ -2,7 +2,7 @@
 
 Meeply Designer helps you turn your board game idea into a printable prototype without spreadsheets or programming. It's designed for quick prototyping and iteration, allowing you to rapidly test new ideas with tools of your choice.
 
-### [Try Meeply Designer in your browser](https://meeply.net/)
+### [Try Meeply Designer in your browser](https://meeply-designer.github.io/)
 
 ## Features
 
@@ -14,7 +14,7 @@ Meeply Designer helps you turn your board game idea into a printable prototype w
 
 ## Join the community
 
-* [Test Meeply Designer in your browser](https://meeply.net/)
+* [Test Meeply Designer in your browser](https://meeply-designer.github.io/)
 * Join our [Discord community](https://discord.gg/vrdhKzg) to chat about Meeply and share your creations
 * Report bugs or suggest features on our [issue tracker](https://github.com/ArseAssassin/meeply-designer/issues)
 * Check out our [open issues](https://github.com/ArseAssassin/meeply-designer/issues) and submit a pull request; send a PM to ArseAssassin at [Discord](https://discord.gg/vrdhKzg) for more help
